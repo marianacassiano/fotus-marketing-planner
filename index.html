@@ -351,6 +351,59 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 </div>
 
 <script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+const supabaseUrl = "https://qoctnofguhjlfraoiqwx.supabase.co";
+const supabaseKey = "sb_publishable_BW72en5_69z4r3yVLJuk1Q_rXVywKs8";
+
+const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
+
+// ── DATABASE FUNCTIONS ─────────────────────────
+
+async function loadCampaignsFromDB(){
+  const { data, error } = await supabaseClient
+    .from("campaigns")
+    .select("*");
+
+  if(!error && data){
+    campaigns = data.map(c => ({
+      id:c.id,
+      name:c.name,
+      color:c.color,
+      inicio:c.inicio,
+      fim:c.fim,
+      briefing:c.briefing,
+      defesa:c.defesa,
+      wa:c.wa || [],
+      email:c.email || [],
+      sms:c.sms || []
+    }));
+
+    renderAll();
+  }
+}
+
+async function insertCampaignDB(data){
+  await supabaseClient
+    .from("campaigns")
+    .insert([data]);
+}
+
+async function updateCampaignDB(id,data){
+  await supabaseClient
+    .from("campaigns")
+    .update(data)
+    .eq("id",id);
+}
+
+async function deleteCampaignDB(id){
+  await supabaseClient
+    .from("campaigns")
+    .delete()
+    .eq("id",id);
+}
+</script>
 // ── DATA ────────────────────────────────────────────────────────
 const USERS=[{email:'mariana.cassiano@fotus.com.br',senha:'123456'},{email:'admin@fotus.com.br',senha:'admin'}];
 const COLORS=[
@@ -849,13 +902,23 @@ function saveCampaign(){
     briefing:document.getElementById('f-briefing').value.trim(),
     defesa:document.getElementById('f-defesa').value.trim(),
     wa:getCanalDates('wa'),email:getCanalDates('email'),sms:getCanalDates('sms')};
-  if(editingId){const idx=campaigns.findIndex(c=>c.id===editingId);campaigns[idx]={...campaigns[idx],...data};}
+if(editingId){
+  const idx=campaigns.findIndex(c=>c.id===editingId);
+  campaigns[idx]={...campaigns[idx],...data};
+  updateCampaignDB(editingId,data);
+}
+else{
+  const newId = Date.now();
+  campaigns.push({id:newId,...data});
+  insertCampaignDB({id:newId,...data});
+}
   else campaigns.push({id:Date.now(),...data});
   closeFormModal();renderAll();
 }
 function deleteCampaign(){
   if(!confirm('Excluir esta campanha?'))return;
-  campaigns=campaigns.filter(c=>c.id!==editingId);
+ deleteCampaignDB(editingId);
+campaigns=campaigns.filter(c=>c.id!==editingId);
   closeFormModal();renderAll();
 }
 
@@ -892,7 +955,7 @@ function editFromDetail(){closeDetailModal();openEditModal(detailId);}
   });
 });
 
-renderAll();
+loadCampaignsFromDB();
 </script>
 </body>
 </html>
