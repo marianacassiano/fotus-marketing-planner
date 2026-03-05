@@ -350,59 +350,6 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
   </div>
 </div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-<script>
-  
-const supabaseUrl = "https://qoctnofguhjlfraoiqwx.supabase.co";
-const supabaseKey = "sb_publishable_BW72en5_69z4r3yVLJuk1Q_rXVywKs8";
-
-const supabaseClient = supabase.createClient(supabaseUrl, supabaseKey);
-
-// ── DATABASE FUNCTIONS ─────────────────────────
-
-async function loadCampaignsFromDB(){
-  const { data, error } = await supabaseClient
-    .from("campaigns")
-    .select("*");
-
-  if(!error && data){
-    campaigns = data.map(c => ({
-      id:c.id,
-      name:c.name,
-      color:c.color,
-      inicio:c.inicio,
-      fim:c.fim,
-      briefing:c.briefing,
-      defesa:c.defesa,
-      wa:c.wa || [],
-      email:c.email || [],
-      sms:c.sms || []
-    }));
-
-    renderAll();
-  }
-}
-
-async function insertCampaignDB(data){
-  await supabaseClient
-    .from("campaigns")
-    .insert([data]);
-}
-
-async function updateCampaignDB(id,data){
-  await supabaseClient
-    .from("campaigns")
-    .update(data)
-    .eq("id",id);
-}
-
-async function deleteCampaignDB(id){
-  await supabaseClient
-    .from("campaigns")
-    .delete()
-    .eq("id",id);
-}
 <script>
 // ── DATA ────────────────────────────────────────────────────────
 const USERS=[{email:'mariana.cassiano@fotus.com.br',senha:'123456'},{email:'admin@fotus.com.br',senha:'admin'}];
@@ -418,6 +365,19 @@ const WEEKDAYS=['SEG','TER','QUA','QUI','SEX'];
 let currentUser=null,currentYear=2026,currentMonth=2,editingId=null,detailId=null,selectedColor=COLORS[0];
 
 let campaigns=[
+  function toISO(dateBR){
+  if(!dateBR) return null
+  const p=dateBR.split("/")
+  if(p.length!==3) return dateBR
+  return `${p[2]}-${p[1]}-${p[0]}`
+}
+
+function toBR(dateISO){
+  if(!dateISO) return ""
+  const p=dateISO.split("-")
+  if(p.length!==3) return dateISO
+  return `${p[2]}/${p[1]}/${p[0]}`
+}
   {
     id:1,name:'QUALIFICA PORTO ALEGRE',color:'#FF5C00',
     inicio:'2026-03-02',fim:'2026-03-19',
@@ -545,14 +505,25 @@ let campaigns=[
 
 // ── AUTH ────────────────────────────────────────────────────────
 function doLogin(){
-  const email = document.querySelector('input[type="email"]').value;
-  const senha = document.querySelector('input[type="password"]').value;
+  const email=document.getElementById('inp-email').value
+  const senha=document.getElementById('inp-senha').value
 
-  if(email && senha){
-    document.querySelector(".login-screen").style.display = "none";
-    document.querySelector(".app").style.display = "block";
-  }else{
-    alert("Preencha e-mail e senha");
+  const user=USERS.find(u=>u.email===email && u.senha===senha)
+
+  if(!user){
+    alert("Usuário ou senha inválidos")
+    return
+  }
+
+  currentUser=user
+  document.getElementById("login-screen").style.display="none"
+  document.getElementById("app").style.display="block"
+
+  renderCalendar()
+}
+  } 
+  else {
+    document.getElementById('login-error').style.display='block';
   }
 }
 function doLogout(){
@@ -852,7 +823,7 @@ function onHexInput(val){
 function addCanalDate(canal,value=''){
   const c=document.getElementById('canal-'+canal);
   const row=document.createElement('div');row.className='canal-date-row';
-  row.innerHTML=`<input class="form-input" type="date" value="${value}"><button class="btn-remove-date" onclick="this.parentElement.remove()">✕</button>`;
+  row.innerHTML=`<input class="form-input" type="date" value="${value || ''}"><button class="btn-remove-date" onclick="this.parentElement.remove()">✕</button>`;
   c.appendChild(row);
 }
 function getCanalDates(canal){return[...document.getElementById('canal-'+canal).querySelectorAll('input')].map(i=>i.value).filter(Boolean);}
@@ -899,23 +870,13 @@ function saveCampaign(){
     briefing:document.getElementById('f-briefing').value.trim(),
     defesa:document.getElementById('f-defesa').value.trim(),
     wa:getCanalDates('wa'),email:getCanalDates('email'),sms:getCanalDates('sms')};
-if(editingId){
-  const idx=campaigns.findIndex(c=>c.id===editingId);
-  campaigns[idx]={...campaigns[idx],...data};
-  updateCampaignDB(editingId,data);
-}
-else{
-  const newId = Date.now();
-  campaigns.push({id:newId,...data});
-  insertCampaignDB({id:newId,...data});
-}
+  if(editingId){const idx=campaigns.findIndex(c=>c.id===editingId);campaigns[idx]={...campaigns[idx],...data};}
   else campaigns.push({id:Date.now(),...data});
   closeFormModal();renderAll();
 }
 function deleteCampaign(){
   if(!confirm('Excluir esta campanha?'))return;
- deleteCampaignDB(editingId);
-campaigns=campaigns.filter(c=>c.id!==editingId);
+  campaigns=campaigns.filter(c=>c.id!==editingId);
   closeFormModal();renderAll();
 }
 
@@ -952,7 +913,17 @@ function editFromDetail(){closeDetailModal();openEditModal(detailId);}
   });
 });
 
-loadCampaignsFromDB();
+renderAll();
+  window.onload = function(){
+
+  // inicia calendário
+  renderCalendar()
+
+  // garante que login apareça primeiro
+  document.getElementById("login-screen").style.display = "flex"
+  document.getElementById("app").style.display = "none"
+
+}
 </script>
 </body>
 </html>
