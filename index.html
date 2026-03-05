@@ -354,25 +354,6 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 
 <script>
   
-  async function testeSupabase(){
-  const { data, error } = await supabaseClient
-    .from("campaigns")
-    .insert([
-      {
-        name: "TESTE SUPABASE",
-        color: "#ff0000",
-        inicio: "2026-03-01",
-        fim: "2026-03-05",
-        briefing: "teste",
-        defesa: "teste"
-      }
-    ]);
-
-  console.log(data,error);
-}
-
-testeSupabase();
-  
 const supabaseUrl = "https://qoctnofguhjlfraoiqwx.supabase.co";
 const supabaseKey = "sb_publishable_BW72en5_69z4r3yVLJuk1Q_rXVywKs8";
 
@@ -422,7 +403,7 @@ async function deleteCampaignDB(id){
     .delete()
     .eq("id",id);
 }
-</script>
+<script>
 // ── DATA ────────────────────────────────────────────────────────
 const USERS=[{email:'mariana.cassiano@fotus.com.br',senha:'123456'},{email:'admin@fotus.com.br',senha:'admin'}];
 const COLORS=[
@@ -564,17 +545,14 @@ let campaigns=[
 
 // ── AUTH ────────────────────────────────────────────────────────
 function doLogin(){
-  const email=document.getElementById('inp-email').value.trim();
-  const senha=document.getElementById('inp-senha').value;
-  const user=USERS.find(u=>u.email===email&&u.senha===senha);
-  if(user){
-    currentUser=user;
-    document.getElementById('login-screen').style.display='none';
-    document.getElementById('app').style.display='block';
-    document.getElementById('topbar-email').textContent=user.email.toUpperCase();
-    renderAll();
-  } else {
-    document.getElementById('login-error').style.display='block';
+  const email = document.querySelector('input[type="email"]').value;
+  const senha = document.querySelector('input[type="password"]').value;
+
+  if(email && senha){
+    document.querySelector(".login-screen").style.display = "none";
+    document.querySelector(".app").style.display = "block";
+  }else{
+    alert("Preencha e-mail e senha");
   }
 }
 function doLogout(){
