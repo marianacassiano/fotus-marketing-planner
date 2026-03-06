@@ -440,6 +440,7 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 }
 
 </style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 <body>
 
@@ -881,6 +882,11 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 </div>
 
 <script>
+    // Conexão com o Supabase
+    const supabaseUrl = 'https://qoctnofguhjlfraoiqwx.supabase.co';
+    const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InFvY3Rub2ZndWhqbGZyYW9pcXd4Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MDk3NDU2ODcsImV4cCI6MjAyNTMyMTY4N30.BW72en5_69z4r3yVLJuk1Q_rXVywKs8';
+    const supabase = Supabase.createClient(supabaseUrl, supabaseKey);
+
 const SUPA_URL='https://qoctnofguhjlfraoiqwx.supabase.co';
 const SUPA_KEY='sb_publishable_BW72en5_69z4r3yVLJuk1Q_rXVywKs8';
 
@@ -1116,20 +1122,7 @@ function backToLogin(){
   document.getElementById('forgot-success').style.display='none';
 }
 
-function doForgotPassword(){
-  const email=document.getElementById('inp-forgot-email').value.trim();
-  const user=USERS.find(u=>u.email===email);
-  const errorEl=document.getElementById('forgot-error');
-  const successEl=document.getElementById('forgot-success');
-  
-  errorEl.style.display='none';
-  successEl.style.display='none';
-  
-  if(!user){
-    errorEl.textContent='E-mail não encontrado no sistema.';
-    errorEl.style.display='block';
-    return;
-  }
+// Função doForgotPassword removida pois dependia da lista de usuários local.
   
   successEl.textContent='Instruções de recuperação foram enviadas para '+email+'. Você pode criar uma nova senha.';
   successEl.style.display='block';
@@ -1148,10 +1141,59 @@ function recordAccess(){
   if(currentUser.acessos.length>3)currentUser.acessos.pop();
 }
 
-function doLogin(){
-  const email=document.getElementById('inp-email').value.trim();
-  const senha=document.getElementById('inp-senha').value;
-  if(!email||!senha){document.getElementById('login-error').style.display='block';document.getElementById('login-error').textContent='E-mail e senha são obrigatórios';return;}
+async function doLogin(){
+      const email = document.getElementById('inp-email').value.trim();
+      const password = document.getElementById('inp-senha').value;
+      const errorEl = document.getElementById('login-error');
+      errorEl.style.display = 'none';
+
+      if (!email || !password) {
+        errorEl.textContent = 'E-mail e senha são obrigatórios';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      // Autenticar com Supabase
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+
+      if (error) {
+        console.error('Erro de login:', error.message);
+        errorEl.textContent = 'E-mail ou senha incorretos. Verifique seus dados.';
+        errorEl.style.display = 'block';
+        return;
+      }
+
+      // Se o login for bem-sucedido, `data.user` conterá as informações do usuário
+      // A partir daqui, o código original para exibir o app pode ser chamado
+      // ATENÇÃO: O código original depende de uma variável `currentUser` e `USERS` que não existem mais.
+      // Precisamos adaptar para usar o usuário do Supabase.
+      console.log('Login bem-sucedido!', data.user);
+      
+      // Simular um objeto currentUser para manter a compatibilidade com o resto do código
+      // O ideal seria refatorar o código para usar `data.user` diretamente
+      currentUser = {
+          id: data.user.id,
+          nome: data.user.user_metadata?.full_name || data.user.email.split('@')[0],
+          email: data.user.email,
+          role: data.user.user_metadata?.role || 'user', // Assumindo que a role está nos metadados
+          foto: data.user.user_metadata?.avatar_url,
+          acessos: []
+      };
+
+      recordAccess();
+      document.getElementById('login-screen').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+      document.getElementById('topbar-email').textContent = currentUser.email.toUpperCase();
+      const rb = document.getElementById('role-badge');
+      rb.textContent = currentUser.role === 'admin' ? 'Administrador' : 'Usuário';
+      rb.className = 'role-badge ' + (currentUser.role === 'admin' ? 'admin' : 'user');
+      updateUserMenu();
+      applyRoleRestrictions();
+      loadCampaigns().catch(e => console.error('Erro ao carregar campanhas:', e));
+    }
   const user=USERS.find(u=>u.email===email&&u.senha===senha);
   if(!user){document.getElementById('login-error').style.display='block';document.getElementById('login-error').textContent='E-mail ou senha incorretos';return;}
   currentUser=user;
@@ -1198,14 +1240,21 @@ function applyRoleRestrictions(){
   if(isUser)showView('resumo');
 }
 
-function doLogout(){
-  currentUser=null;campaigns=[];
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('inp-email').value='';
-  document.getElementById('inp-senha').value='';
-  ['nav-cal','nav-dash','nav-usuarios','btn-nova-camp'].forEach(id=>document.getElementById(id).style.display='');
-}
+async function doLogout(){
+      const { error } = await supabase.auth.signOut();
+      if(error) {
+        console.error('Erro ao fazer logout:', error.message);
+        alert('Erro ao tentar sair. Tente novamente.');
+        return;
+      }
+      currentUser = null;
+      campaigns = [];
+      document.getElementById('app').style.display = 'none';
+      document.getElementById('login-screen').style.display = 'flex';
+      document.getElementById('inp-email').value = '';
+      document.getElementById('inp-senha').value = '';
+      ['nav-cal', 'nav-dash', 'nav-usuarios', 'btn-nova-camp'].forEach(id => document.getElementById(id).style.display = '');
+    }
 
 document.getElementById('inp-senha').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
@@ -1511,7 +1560,8 @@ function deleteUser(userId){
 function exportarCalendario(){
   const mes=MONTHS_PT[currentMonth],ano=currentYear;
   const rows=getFiltered('cal').map(c=>'<tr><td><strong>'+c.name+'</strong></td><td>'+(CAT_LABELS[c.categoria]||c.categoria)+'</td><td>'+fmtFull(c.inicio)+' – '+fmtFull(c.fim)+'</td><td>'+((c.wa||[]).map(fmtFull).join(', ')||'—')+'</td><td>'+((c.email||[]).map(fmtFull).join(', ')||'—')+'</td><td>'+((c.sms||[]).map(fmtFull).join(', ')||'—')+'</td></tr>').join('');
-  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Calendário '+mes+' '+ano+'</title><style>body{font-family:Arial,sans-serif;padding:24px;}h1{font-size:20px;margin-bottom:18px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#F0F2F7;padding:10px;text-align:left;font-size:10px;text-transform:uppercase;border:1px solid #E2E6EF;}td{padding:10px;border:1px solid #E2E6EF;vertical-align:top;}tr:nth-child(even) td{background:#F8F9FC;}</style></head><body><h1>Calendário · '+mes+' '+ano+' · Fotus</h1><table><thead><tr><th>Campanha</th><th>Categoria</th><th>Vigência</th><th>WhatsApp</th><th>E-mail</th><th>SMS</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
+  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Calendário '+mes+' '+ano+'</title><style>body{font-family:Arial,sans-serif;padding:24px;}h1{font-size:20px;margin-bottom:18px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#F0F2F7;padding:10px;text-align:left;font-size:10px;text-transform:uppercase;border:1px solid #E2E6EF;}td{padding:10px;border:1px solid #E2E6EF;vertical-align:top;}tr:nth-child(even) td{background:#F8F9FC;}</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script></head><body><h1>Calendário · '+mes+' '+ano+' · Fotus</h1><table><thead><tr><th>Campanha</th><th>Categoria</th><th>Vigência</th><th>WhatsApp</th><th>E-mail</th><th>SMS</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
   const a=document.createElement('a');
   a.setAttribute('href','data:text/html;charset=utf-8,'+encodeURIComponent(html));
   a.setAttribute('download','calendario-fotus-'+mes.toLowerCase()+'-'+ano+'.html');
