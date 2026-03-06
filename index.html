@@ -422,26 +422,39 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
           <span class="filtro-count" id="fcnt-cal" style="display:none">0</span>
           <span class="f-arrow">▾</span>
         </button>
-        <div class="filtro-panel" id="fp-cal">
+                <div class="filtro-panel" id="fp-cal">
           <div class="fp-section">
             <div class="fp-label">Categoria</div>
             <div class="fp-chips">
-              <button class="fp-chip cat-com" id="fpc-cal-COMERCIAL" onclick="toggleChip('cal','categoria','COMERCIAL')">Comercial</button>
-              <button class="fp-chip cat-cont" id="fpc-cal-CONTEUDO" onclick="toggleChip('cal','categoria','CONTEUDO')">Conteúdo</button>
-              <button class="fp-chip cat-ev" id="fpc-cal-EVENTOS" onclick="toggleChip('cal','categoria','EVENTOS')">Eventos</button>
+              <button class="fp-chip cat-com" id="fpc-cal-cat-COMERCIAL" onclick="toggleMulti('cal','categorias','COMERCIAL')">Comercial</button>
+              <button class="fp-chip cat-cont" id="fpc-cal-cat-CONTEUDO" onclick="toggleMulti('cal','categorias','CONTEUDO')">Conteúdo</button>
+              <button class="fp-chip cat-ev" id="fpc-cal-cat-EVENTOS" onclick="toggleMulti('cal','categorias','EVENTOS')">Eventos</button>
             </div>
           </div>
           <div class="fp-divider"></div>
           <div class="fp-section">
-            <div class="fp-label">Canal de Disparo</div>
+            <div class="fp-label">Estratégia</div>
             <div class="fp-chips">
-              <button class="fp-chip ch-wa" id="fpc-cal-wa" onclick="toggleChip('cal','canal','wa')">WhatsApp</button>
-              <button class="fp-chip ch-email" id="fpc-cal-email" onclick="toggleChip('cal','canal','email')">E-mail</button>
-              <button class="fp-chip ch-sms" id="fpc-cal-sms" onclick="toggleChip('cal','canal','sms')">SMS</button>
+              <button class="fp-chip" id="fpc-cal-est-INBOUND" onclick="toggleMulti('cal','estrategias','INBOUND')">Inbound</button>
+              <button class="fp-chip" id="fpc-cal-est-REDE_SOCIAL" onclick="toggleMulti('cal','estrategias','REDE_SOCIAL')">Rede Social</button>
+              <button class="fp-chip" id="fpc-cal-est-PERFORMANCE" onclick="toggleMulti('cal','estrategias','PERFORMANCE')">Performance</button>
             </div>
           </div>
           <div class="fp-divider"></div>
-          <div class="fp-footer"><button class="btn-limpar" onclick="limparFiltros('cal')">Limpar filtros</button></div>
+          <div class="fp-section">
+            <div class="fp-label">Canais</div>
+            <div class="fp-chips" style="display:grid;grid-template-columns:1fr 1fr;gap:4px;">
+              <button class="fp-chip" id="fpc-cal-can-inbound_wa" onclick="toggleMulti('cal','canais','inbound_wa')">WhatsApp</button>
+              <button class="fp-chip" id="fpc-cal-can-inbound_email" onclick="toggleMulti('cal','canais','inbound_email')">E-mail</button>
+              <button class="fp-chip" id="fpc-cal-can-inbound_sms" onclick="toggleMulti('cal','canais','inbound_sms')">SMS</button>
+              <button class="fp-chip" id="fpc-cal-can-rede_social_instagram" onclick="toggleMulti('cal','canais','rede_social_instagram')">Instagram</button>
+              <button class="fp-chip" id="fpc-cal-can-rede_social_facebook" onclick="toggleMulti('cal','canais','rede_social_facebook')">Facebook</button>
+              <button class="fp-chip" id="fpc-cal-can-rede_social_linkedin" onclick="toggleMulti('cal','canais','rede_social_linkedin')">LinkedIn</button>
+              <button class="fp-chip" id="fpc-cal-can-performance_google_ads" onclick="toggleMulti('cal','canais','performance_google_ads')">Google Ads</button>
+            </div>
+          </div>
+          <div class="fp-divider"></div>
+          <div class="fp-footer"><button class="btn-limpar" onclick="clearAllFilters()">Limpar filtros</button></div>
         </div>
       </div>
       <button class="btn-export" onclick="exportarCalendario()">📥 Exportar Calendário</button>
@@ -858,6 +871,49 @@ function toggleChip(ctx,key,val){
   fpState[ctx][key]=fpState[ctx][key]===val?null:val;
   syncChips(ctx);renderAll();
 }
+
+function toggleMulti(ctx, type, val){
+  const s = fpState[ctx];
+  const idx = s[type].indexOf(val);
+  if(idx >= 0) s[type].splice(idx, 1);
+  else s[type].push(val);
+  updateFilterUI();
+  renderAll();
+}
+
+function clearAllFilters(){
+  fpState.cal = {categorias:[], canais:[], estrategias:[]};
+  fpState.res = {categorias:[], canais:[], estrategias:[]};
+  updateFilterUI();
+  renderAll();
+  showToast('Filtros limpos!');
+}
+
+function updateFilterUI(){
+  const ctx = 'cal';
+  const s = fpState[ctx];
+  const total = s.categorias.length + s.canais.length + s.estrategias.length;
+  const badge = document.getElementById('fcnt-cal');
+  if(badge) {
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'inline-flex' : 'none';
+  }
+  // Update chips
+  document.querySelectorAll('.fp-chip').forEach(chip => {
+    const id = chip.id;
+    if(!id) return;
+    if(id.includes('-cat-')) {
+        const val = id.split('-cat-')[1];
+        if(s.categorias.includes(val)) chip.classList.add('active'); else chip.classList.remove('active');
+    } else if(id.includes('-est-')) {
+        const val = id.split('-est-')[1];
+        if(s.estrategias.includes(val)) chip.classList.add('active'); else chip.classList.remove('active');
+    } else if(id.includes('-can-')) {
+        const val = id.split('-can-')[1];
+        if(s.canais.includes(val)) chip.classList.add('active'); else chip.classList.remove('active');
+    }
+  });
+}
 function limparFiltros(ctx){
   Object.keys(fpState[ctx]).forEach(k=>fpState[ctx][k]=null);
   syncChips(ctx);renderAll();
@@ -879,14 +935,24 @@ function getFiltered(ctx){
   const isUser=currentUser&&currentUser.role==='user';
   return campaigns.filter(c=>{
     if(isUser&&c.categoria!=='COMERCIAL')return false;
-    if(s.categorias&&s.categorias.length>0&&!s.categorias.includes(c.categoria))return false;
-    if(s.canais&&s.canais.length>0){
-      const hasCanal=s.canais.some(canal=>{
-        if(canal.startsWith('inbound_'))return(c[canal.replace('inbound_','')+'_inbound']||[]).length>0;
-        if(canal.startsWith('rede_social_'))return(c[canal]||[]).length>0;
-        if(canal.startsWith('performance_'))return(c[canal]||[]).length>0;
-        return false;
-      });
+    if(s.categorias && s.categorias.length > 0 && !s.categorias.includes(c.categoria)) return false;
+    if(s.estrategias && s.estrategias.length > 0) {
+        const hasEst = s.estrategias.some(est => {
+            if(est === 'INBOUND') return (c.inbound_wa||[]).length > 0 || (c.inbound_email||[]).length > 0 || (c.inbound_sms||[]).length > 0;
+            if(est === 'REDE_SOCIAL') return (c.rede_social_instagram||[]).length > 0 || (c.rede_social_facebook||[]).length > 0 || (c.rede_social_linkedin||[]).length > 0 || (c.rede_social_blog||[]).length > 0 || (c.rede_social_outros||[]).length > 0;
+            if(est === 'PERFORMANCE') return (c.performance_instagram_ads||[]).length > 0 || (c.performance_facebook_ads||[]).length > 0 || (c.performance_google_ads||[]).length > 0;
+            return false;
+        });
+        if(!hasEst) return false;
+    }
+    if(s.canais && s.canais.length > 0) {
+        const hasCanal = s.canais.some(canal => (c[canal]||[]).length > 0);
+        if(!hasCanal) return false;
+    }
+    if(q&&!c.name.toLowerCase().includes(q))return false;
+    return true;
+  });
+});
       if(!hasCanal)return false;
     }
     if(q&&!c.name.toLowerCase().includes(q))return false;
@@ -1204,9 +1270,50 @@ function renderDashboard(){
   const all=campaigns;
   const ativas=all.filter(c=>c.inicio<=ts&&c.fim>=ts);
   const enc=all.filter(c=>c.fim<ts);const breve=all.filter(c=>c.inicio>ts);
-  const td=all.reduce((a,c)=>a+(c.wa||[]).length+(c.email||[]).length+(c.sms||[]).length+(c.inbound_wa||[]).length+(c.inbound_email||[]).length+(c.inbound_sms||[]).length+(c.rede_social_instagram||[]).length+(c.rede_social_facebook||[]).length+(c.rede_social_linkedin||[]).length+(c.rede_social_blog||[]).length+(c.rede_social_outros||[]).length+(c.performance_instagram_ads||[]).length+(c.performance_facebook_ads||[]).length+(c.performance_google_ads||[]).length,0);
-  document.getElementById('dash-kpis').innerHTML='<div class="kpi-card"><div class="kpi-label">Total Campanhas</div><div class="kpi-value" style="color:var(--purple)">'+all.length+'</div><div class="kpi-sub">'+ativas.length+' ativas agora</div></div><div class="kpi-card"><div class="kpi-label">Ativas</div><div class="kpi-value" style="color:var(--green)">'+ativas.length+'</div><div class="kpi-sub">'+breve.length+' em breve</div></div><div class="kpi-card"><div class="kpi-label">Encerradas</div><div class="kpi-value" style="color:var(--gray-400)">'+enc.length+'</div><div class="kpi-sub">este período</div></div><div class="kpi-card"><div class="kpi-label">Total Disparos</div><div class="kpi-value" style="color:var(--orange)">'+td+'</div><div class="kpi-sub">em todos os canais</div></div>';
+  
+  const td = all.reduce((a, c) => {
+    return a + (c.inbound_wa||[]).length + (c.inbound_email||[]).length + (c.inbound_sms||[]).length +
+           (c.rede_social_instagram||[]).length + (c.rede_social_facebook||[]).length + (c.rede_social_linkedin||[]).length +
+           (c.rede_social_blog||[]).length + (c.rede_social_outros||[]).length +
+           (c.performance_instagram_ads||[]).length + (c.performance_facebook_ads||[]).length + (c.performance_google_ads||[]).length;
+  }, 0);
+
+  document.getElementById('dash-kpis').innerHTML='<div class="kpi-card"><div class="kpi-label">Total Campanhas</div><div class="kpi-value" style="color:var(--purple)">'+all.length+'</div><div class="kpi-sub">'+ativas.length+' ativas agora</div></div><div class="kpi-card"><div class="kpi-label">Ativas</div><div class="kpi-value" style="color:var(--green)">'+ativas.length+'</div><div class="kpi-sub">'+breve.length+' em breve</div></div><div class="kpi-card"><div class="kpi-label">Encerradas</div><div class="kpi-value" style="color:var(--gray-400)">'+enc.length+'</div><div class="kpi-sub">este período</div></div><div class="kpi-card"><div class="kpi-label">Total Ações</div><div class="kpi-value" style="color:var(--orange)">'+td+'</div><div class="kpi-sub">em todos os canais</div></div>';
+  
   const cc={COMERCIAL:0,CONTEUDO:0,EVENTOS:0};all.forEach(c=>{if(cc[c.categoria]!==undefined)cc[c.categoria]++;});
+  const mx=Math.max(...Object.values(cc),1);
+  const ccol={COMERCIAL:'#1E88E5',CONTEUDO:'#43A047',EVENTOS:'#FB8C00'};
+  document.getElementById('dash-cat-bars').innerHTML=Object.entries(cc).map(([k,n])=>'<div class="bar-item"><div class="bar-label">'+CAT_LABELS[k]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(n/mx*100)+'%;background:'+ccol[k]+'"></div></div><div class="bar-count">'+n+'</div></div>').join('');
+  
+  const stats = {
+    'WhatsApp': all.reduce((a,c)=>a+(c.inbound_wa||[]).length,0),
+    'E-mail': all.reduce((a,c)=>a+(c.inbound_email||[]).length,0),
+    'SMS': all.reduce((a,c)=>a+(c.inbound_sms||[]).length,0),
+    'Instagram': all.reduce((a,c)=>a+(c.rede_social_instagram||[]).length+(c.performance_instagram_ads||[]).length,0),
+    'Facebook': all.reduce((a,c)=>a+(c.rede_social_facebook||[]).length+(c.performance_facebook_ads||[]).length,0),
+    'Google Ads': all.reduce((a,c)=>a+(c.performance_google_ads||[]).length,0)
+  };
+  
+  document.getElementById('dash-canal-stats').innerHTML=Object.entries(stats).map(([name, count]) => `
+    <div class="canal-stat-row">
+      <div class="canal-stat-name"><div class="canal-stat-dot" style="background:var(--purple)"></div>${name}</div>
+      <div><div class="canal-stat-num">${count}</div><div class="canal-stat-sub">ações planejadas</div></div>
+    </div>`).join('');
+
+  const disp=[];
+  all.forEach(c=>{
+    const map = [
+        {d:c.inbound_wa, e:'INB', n:'WPP', cl:'#25D366'}, {d:c.inbound_email, e:'INB', n:'EMM', cl:'#2196F3'}, {d:c.inbound_sms, e:'INB', n:'SMS', cl:'#FF9800'},
+        {d:c.rede_social_instagram, e:'SOC', n:'INST', cl:'#E91E63'}, {d:c.rede_social_facebook, e:'SOC', n:'FB', cl:'#1877F2'}, {d:c.rede_social_linkedin, e:'SOC', n:'LI', cl:'#0A66C2'},
+        {d:c.performance_instagram_ads, e:'PERF', n:'INST-ADS', cl:'#E91E63'}, {d:c.performance_facebook_ads, e:'PERF', n:'FB-ADS', cl:'#1877F2'}, {d:c.performance_google_ads, e:'PERF', n:'GADS', cl:'#EA4335'}
+    ];
+    map.forEach(m => {
+        (m.d||[]).forEach(dt => { if(dt>=ts) disp.push({nome:c.name, est:m.e, canal:m.n, color:m.cl, data:dt, cat:c.categoria}); });
+    });
+  });
+  disp.sort((a,b)=>a.data.localeCompare(b.data));
+  document.getElementById('dash-disparos').innerHTML=disp.slice(0,6).map(d=>'<div class="timeline-item"><div class="timeline-dot" style="background:'+d.color+'"></div><div class="timeline-content"><div class="timeline-name">'+d.nome+' ['+d.est+'-'+d.canal+'] '+catBadge(d.cat)+'</div><div class="timeline-date">'+fmtFull(d.data)+'</div></div></div>').join('')||'<p style="color:var(--gray-400);font-size:12px;">Nenhuma ação futura.</p>';
+};all.forEach(c=>{if(cc[c.categoria]!==undefined)cc[c.categoria]++;});
   const mx=Math.max(...Object.values(cc),1);
   const ccol={COMERCIAL:'#1E88E5',CONTEUDO:'#43A047',EVENTOS:'#FB8C00'};
   document.getElementById('dash-cat-bars').innerHTML=Object.entries(cc).map(([k,n])=>'<div class="bar-item"><div class="bar-label">'+CAT_LABELS[k]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(n/mx*100)+'%;background:'+ccol[k]+'"></div></div><div class="bar-count">'+n+'</div></div>').join('');
@@ -1346,6 +1453,43 @@ function onNativeColor(hex){setPickerColor(hex);document.getElementById('color-s
 function onHexInput(hex){if(/^#[0-9A-F]{6}$/i.test(hex))setPickerColor(hex);}
 
 // ── CATEGORIA ─────────────────────────────────────────────────────
+
+function toggleFilterCategory(cat){
+  const ctx='cal';
+  const idx=fpState[ctx].categorias.indexOf(cat);
+  if(idx>=0) fpState[ctx].categorias.splice(idx,1);
+  else fpState[ctx].categorias.push(cat);
+  updateFilterUI(); renderAll();
+}
+function toggleFilterEstrategia(est){
+  const ctx='cal';
+  const idx=fpState[ctx].estrategias.indexOf(est);
+  if(idx>=0) fpState[ctx].estrategias.splice(idx,1);
+  else fpState[ctx].estrategias.push(est);
+  updateFilterUI(); renderAll();
+}
+function toggleFilterCanal(canal){
+  const ctx='cal';
+  const idx=fpState[ctx].canais.indexOf(canal);
+  if(idx>=0) fpState[ctx].canais.splice(idx,1);
+  else fpState[ctx].canais.push(canal);
+  updateFilterUI(); renderAll();
+}
+function clearAllFilters(){
+  fpState.cal={categorias:[],canais:[],estrategias:[]};
+  fpState.res={categorias:[],canais:[],estrategias:[]};
+  updateFilterUI(); renderAll();
+  showToast('Filtros limpos!');
+}
+function updateFilterUI(){
+  const ctx='cal';
+  const total = fpState[ctx].categorias.length + fpState[ctx].estrategias.length + fpState[ctx].canais.length;
+  const badge = document.querySelector('.filter-badge');
+  if(badge) {
+    badge.textContent = total;
+    badge.style.display = total > 0 ? 'inline-flex' : 'none';
+  }
+}
 function selectCat(cat){
   selectedCat=cat;
   ['COMERCIAL','CONTEUDO','EVENTOS'].forEach(c=>{document.getElementById('cat-'+c).className='cat-opt'+(c===cat?' sel-'+c:'');});
