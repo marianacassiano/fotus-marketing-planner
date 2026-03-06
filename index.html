@@ -504,7 +504,11 @@ function toBR(dateISO){
 ];
 
 // ── AUTH ────────────────────────────────────────────────────────
-
+// usuários permitidos
+const USERS = [
+ {email:'mariana.cassiano@fotus.com.br',senha:'123456'},
+ {email:'admin@fotus.com.br',senha:'admin'}
+]
   function doLogin(){
 
   const emailInput = document.getElementById('inp-email')
