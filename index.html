@@ -192,7 +192,7 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <p class="subtitle">Marketing Planner Fotus</p>
     <input class="inp" type="email" id="inp-email" placeholder="E-mail">
     <input class="inp" type="password" id="inp-senha" placeholder="Senha">
-    <button onclick="doLogin()">ENTRAR</button>
+    <button class="btn-login" onclick="doLogin()">ENTRAR</button>
     <p class="login-error" id="login-error">E-mail ou senha incorretos.</p>
   </div>
 </div>
@@ -365,19 +365,6 @@ const WEEKDAYS=['SEG','TER','QUA','QUI','SEX'];
 let currentUser=null,currentYear=2026,currentMonth=2,editingId=null,detailId=null,selectedColor=COLORS[0];
 
 let campaigns=[
-  function toISO(dateBR){
-  if(!dateBR) return null
-  const p=dateBR.split("/")
-  if(p.length!==3) return dateBR
-  return `${p[2]}-${p[1]}-${p[0]}`
-}
-
-function toBR(dateISO){
-  if(!dateISO) return ""
-  const p=dateISO.split("-")
-  if(p.length!==3) return dateISO
-  return `${p[2]}/${p[1]}/${p[0]}`
-}
   {
     id:1,name:'QUALIFICA PORTO ALEGRE',color:'#FF5C00',
     inicio:'2026-03-02',fim:'2026-03-19',
@@ -503,171 +490,62 @@ function toBR(dateISO){
   },
 ];
 
-// ── USUÁRIOS PERMITIDOS ─────────────────────────────────────────
-const USERS = [
-  { email:'mariana.cassiano@fotus.com.br', senha:'123456' },
-  { email:'admin@fotus.com.br', senha:'admin' }
-]
-
-// ── LOGIN ───────────────────────────────────────────────────────
+// ── AUTH ────────────────────────────────────────────────────────
 function doLogin(){
-
-  const emailInput = document.getElementById('inp-email')
-  const senhaInput = document.getElementById('inp-senha')
-  const erro = document.getElementById('login-error')
-
-  if(!emailInput || !senhaInput){
-    console.error("Campos de login não encontrados")
-    return
+  const email=document.getElementById('inp-email').value.trim();
+  const senha=document.getElementById('inp-senha').value;
+  const user=USERS.find(u=>u.email===email&&u.senha===senha);
+  if(user){
+    currentUser=user;
+    document.getElementById('login-screen').style.display='none';
+    document.getElementById('app').style.display='block';
+    document.getElementById('topbar-email').textContent=user.email.toUpperCase();
+    renderAll();
+  } else {
+    document.getElementById('login-error').style.display='block';
   }
-
-  const email = emailInput.value.trim()
-  const senha = senhaInput.value.trim()
-
-  if(!email || !senha){
-    alert("Digite email e senha")
-    return
-  }
-
-  const user = USERS.find(function(u){
-    return u.email === email && u.senha === senha
-  })
-
-  if(!user){
-    if(erro){
-      erro.style.display = "block"
-    }else{
-      alert("Usuário ou senha inválidos")
-    }
-    return
-  }
-
-  currentUser = user
-
-  const loginScreen = document.getElementById("login-screen")
-  const app = document.getElementById("app")
-
-  if(loginScreen) loginScreen.style.display = "none"
-  if(app) app.style.display = "block"
-
-  renderCalendar()
 }
-
-// ── LOGOUT ──────────────────────────────────────────────────────
 function doLogout(){
-
-  const app = document.getElementById('app')
-  const login = document.getElementById('login-screen')
-  const email = document.getElementById('inp-email')
-  const senha = document.getElementById('inp-senha')
-
-  if(app) app.style.display = 'none'
-  if(login) login.style.display = 'flex'
-
-  if(email) email.value = ''
-  if(senha) senha.value = ''
+  document.getElementById('app').style.display='none';
+  document.getElementById('login-screen').style.display='flex';
+  document.getElementById('inp-email').value='';
+  document.getElementById('inp-senha').value='';
 }
+document.getElementById('inp-senha').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
 
-// ── ENTER PARA LOGIN ────────────────────────────────────────────
-document.addEventListener("DOMContentLoaded", function(){
-
-  const senhaInput = document.getElementById('inp-senha')
-
-  if(senhaInput){
-    senhaInput.addEventListener('keydown', function(e){
-      if(e.key === 'Enter'){
-        doLogin()
-      }
-    })
-  }
-
-})
 // ── VIEWS ───────────────────────────────────────────────────────
 function showView(v){
-
-  document.getElementById('view-calendario')?.classList.toggle('active',v==='calendario')
-  document.getElementById('view-resumo')?.classList.toggle('active',v==='resumo')
-
-  document.getElementById('nav-cal')?.classList.toggle('active',v==='calendario')
-  document.getElementById('nav-res')?.classList.toggle('active',v==='resumo')
-
-  if(v==='resumo'){
-    renderResumo()
-  }
-
+  document.getElementById('view-calendario').classList.toggle('active',v==='calendario');
+  document.getElementById('view-resumo').classList.toggle('active',v==='resumo');
+  document.getElementById('nav-cal').classList.toggle('active',v==='calendario');
+  document.getElementById('nav-res').classList.toggle('active',v==='resumo');
+  if(v==='resumo')renderResumo();
 }
-
-function renderAll(){
-  renderDispatch()
-  renderGantt()
-  renderSidebar()
-  renderResumo()
-}
-
+function renderAll(){renderDispatch();renderGantt();renderSidebar();renderResumo();}
 
 // ── HELPERS ─────────────────────────────────────────────────────
-function fmt(d){
-  const [y,m,dd] = d.split('-')
-  return `${dd}/${m}`
-}
-
-function fmtFull(d){
-  const [y,m,dd] = d.split('-')
-  return `${dd}/${m}/${y}`
-}
-
-function toDate(s){
-  return new Date(s + 'T00:00:00')
-}
-
-function toStr(d){
-  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
-}
-
+function fmt(d){const[y,m,dd]=d.split('-');return`${dd}/${m}`;}
+function fmtFull(d){const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;}
+function toDate(s){return new Date(s+'T00:00:00');}
+function toStr(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
 function getStatus(c){
-
-  const today = new Date()
-  today.setHours(0,0,0,0)
-
-  const todayStr = toStr(today)
-
-  if(c.fim < todayStr){
-    return {label:'Encerrada',color:'var(--gray-400)'}
-  }
-
-  if(c.inicio > todayStr){
-    return {label:'Em Breve',color:'var(--purple)'}
-  }
-
-  const diff = Math.round((toDate(c.fim) - today) / 86400000)
-
-  if(diff <= 2){
-    return {label:`🔥 Encerra em ${diff} dia${diff!==1?'s':''}`,color:'var(--red)'}
-  }
-
-  return {label:`Ativa · ${diff} dias restantes`,color:'var(--green)'}
-
+  const today=new Date();today.setHours(0,0,0,0);
+  const todayStr=toStr(today);
+  if(c.fim<todayStr)return{label:'Encerrada',color:'var(--gray-400)'};
+  if(c.inicio>todayStr)return{label:'Em Breve',color:'var(--purple)'};
+  const diff=Math.round((toDate(c.fim)-today)/86400000);
+  if(diff<=2)return{label:`🔥 Encerra em ${diff} dia${diff!==1?'s':''}`,color:'var(--red)'};
+  return{label:`Ativa · ${diff} dias restantes`,color:'var(--green)'};
 }
-
 
 // ── CHANGE MONTH ────────────────────────────────────────────────
 function changeMonth(d){
-
-  currentMonth += d
-
-  if(currentMonth > 11){
-    currentMonth = 0
-    currentYear++
-  }
-
-  if(currentMonth < 0){
-    currentMonth = 11
-    currentYear--
-  }
-
-  renderAll()
-
+  currentMonth+=d;
+  if(currentMonth>11){currentMonth=0;currentYear++;}
+  if(currentMonth<0){currentMonth=11;currentYear--;}
+  renderAll();
 }
+
 // ── DISPATCH CALENDAR (Mon–Fri only) ────────────────────────────
 function renderDispatch(){
   document.getElementById('cal-month-label').textContent=`${MONTHS_PT[currentMonth]} ${currentYear}`;
@@ -924,7 +802,7 @@ function onHexInput(val){
 function addCanalDate(canal,value=''){
   const c=document.getElementById('canal-'+canal);
   const row=document.createElement('div');row.className='canal-date-row';
-  row.innerHTML=`<input class="form-input" type="date" value="${value || ''}"><button class="btn-remove-date" onclick="this.parentElement.remove()">✕</button>`;
+  row.innerHTML=`<input class="form-input" type="date" value="${value}"><button class="btn-remove-date" onclick="this.parentElement.remove()">✕</button>`;
   c.appendChild(row);
 }
 function getCanalDates(canal){return[...document.getElementById('canal-'+canal).querySelectorAll('input')].map(i=>i.value).filter(Boolean);}
@@ -1015,29 +893,6 @@ function editFromDetail(){closeDetailModal();openEditModal(detailId);}
 });
 
 renderAll();
-  window.onload = function(){
-  renderCalendar()
-}
-  function login(){
-
-  const email = document.getElementById("inp-email").value
-  const senha = document.getElementById("inp-senha").value
-
-  const user = USERS.find(u => u.email === email && u.senha === senha)
-
-  if(!user){
-    alert("Usuário ou senha inválidos")
-    return
-  }
-
-  currentUser = user
-
-  document.getElementById("login-screen").style.display = "none"
-  document.getElementById("app").style.display = "block"
-
-  renderCalendar()
-
-}
 </script>
 </body>
 </html>
