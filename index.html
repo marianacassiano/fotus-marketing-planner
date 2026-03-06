@@ -503,13 +503,14 @@ function toBR(dateISO){
   },
 ];
 
-// ── AUTH ────────────────────────────────────────────────────────
-// usuários permitidos
+// ── USUÁRIOS PERMITIDOS ─────────────────────────────────────────
 const USERS = [
- {email:'mariana.cassiano@fotus.com.br',senha:'123456'},
- {email:'admin@fotus.com.br',senha:'admin'}
+  { email:'mariana.cassiano@fotus.com.br', senha:'123456' },
+  { email:'admin@fotus.com.br', senha:'admin' }
 ]
-  function doLogin(){
+
+// ── LOGIN ───────────────────────────────────────────────────────
+function doLogin(){
 
   const emailInput = document.getElementById('inp-email')
   const senhaInput = document.getElementById('inp-senha')
@@ -552,29 +553,6 @@ const USERS = [
   renderCalendar()
 }
 
-  const user = USERS.find(u => u.email === email && u.senha === senha)
-
-  if(!user){
-    const erro = document.getElementById('login-error')
-    if(erro){
-      erro.style.display = "block"
-    } else {
-      alert("Usuário ou senha inválidos")
-    }
-    return
-  }
-
-  currentUser = user
-
-  const loginScreen = document.getElementById("login-screen")
-  const appScreen = document.getElementById("app")
-
-  if(loginScreen) loginScreen.style.display = "none"
-  if(appScreen) appScreen.style.display = "block"
-
-  renderCalendar()
-}
-
 // ── LOGOUT ──────────────────────────────────────────────────────
 function doLogout(){
 
@@ -590,17 +568,20 @@ function doLogout(){
   if(senha) senha.value = ''
 }
 
-// ENTER PARA LOGIN
-const senhaInput = document.getElementById('inp-senha')
-if(senhaInput){
-  senhaInput.addEventListener('keydown', function(e){
-    if(e.key === 'Enter'){
-      doLogin()
-    }
-  })
-}
+// ── ENTER PARA LOGIN ────────────────────────────────────────────
+document.addEventListener("DOMContentLoaded", function(){
 
+  const senhaInput = document.getElementById('inp-senha')
 
+  if(senhaInput){
+    senhaInput.addEventListener('keydown', function(e){
+      if(e.key === 'Enter'){
+        doLogin()
+      }
+    })
+  }
+
+})
 // ── VIEWS ───────────────────────────────────────────────────────
 function showView(v){
 
