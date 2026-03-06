@@ -506,13 +506,25 @@ function toBR(dateISO){
 // ── AUTH ────────────────────────────────────────────────────────
 function doLogin(){
 
-  const email = document.getElementById('inp-email').value
-  const senha = document.getElementById('inp-senha').value
+  const email = document.getElementById('inp-email').value.trim()
+  const senha = document.getElementById('inp-senha').value.trim()
 
-  const user = USERS.find(u => u.email === email && u.senha === senha)
+  if(!email || !senha){
+    alert("Digite email e senha")
+    return
+  }
+
+  const user = USERS.find(function(u){
+    return u.email === email && u.senha === senha
+  })
 
   if(!user){
-    document.getElementById('login-error').style.display = 'block'
+    const erro = document.getElementById('login-error')
+    if(erro){
+      erro.style.display = "block"
+    }else{
+      alert("Usuário ou senha inválidos")
+    }
     return
   }
 
@@ -522,6 +534,7 @@ function doLogin(){
   document.getElementById("app").style.display = "block"
 
   renderCalendar()
+
 }
 function doLogout(){
   document.getElementById('app').style.display='none';
