@@ -504,25 +504,32 @@ function toBR(dateISO){
 ];
 
 // ── AUTH ────────────────────────────────────────────────────────
+// ── LOGIN ───────────────────────────────────────────────────────
 function doLogin(){
 
-  const email = document.getElementById('inp-email').value.trim()
-  const senha = document.getElementById('inp-senha').value.trim()
+  const emailInput = document.getElementById('inp-email')
+  const senhaInput = document.getElementById('inp-senha')
+
+  if(!emailInput || !senhaInput){
+    console.error("Campos de login não encontrados")
+    return
+  }
+
+  const email = emailInput.value.trim()
+  const senha = senhaInput.value.trim()
 
   if(!email || !senha){
     alert("Digite email e senha")
     return
   }
 
-  const user = USERS.find(function(u){
-    return u.email === email && u.senha === senha
-  })
+  const user = USERS.find(u => u.email === email && u.senha === senha)
 
   if(!user){
     const erro = document.getElementById('login-error')
     if(erro){
       erro.style.display = "block"
-    }else{
+    } else {
       alert("Usuário ou senha inválidos")
     }
     return
@@ -530,53 +537,127 @@ function doLogin(){
 
   currentUser = user
 
-  document.getElementById("login-screen").style.display = "none"
-  document.getElementById("app").style.display = "block"
+  const loginScreen = document.getElementById("login-screen")
+  const appScreen = document.getElementById("app")
+
+  if(loginScreen) loginScreen.style.display = "none"
+  if(appScreen) appScreen.style.display = "block"
 
   renderCalendar()
+}
 
-}
+// ── LOGOUT ──────────────────────────────────────────────────────
 function doLogout(){
-  document.getElementById('app').style.display='none';
-  document.getElementById('login-screen').style.display='flex';
-  document.getElementById('inp-email').value='';
-  document.getElementById('inp-senha').value='';
+
+  const app = document.getElementById('app')
+  const login = document.getElementById('login-screen')
+  const email = document.getElementById('inp-email')
+  const senha = document.getElementById('inp-senha')
+
+  if(app) app.style.display = 'none'
+  if(login) login.style.display = 'flex'
+
+  if(email) email.value = ''
+  if(senha) senha.value = ''
 }
-document.getElementById('inp-senha').addEventListener('keydown',e=>{if(e.key==='Enter')doLogin();});
+
+// ENTER PARA LOGIN
+const senhaInput = document.getElementById('inp-senha')
+if(senhaInput){
+  senhaInput.addEventListener('keydown', function(e){
+    if(e.key === 'Enter'){
+      doLogin()
+    }
+  })
+}
+
 
 // ── VIEWS ───────────────────────────────────────────────────────
 function showView(v){
-  document.getElementById('view-calendario').classList.toggle('active',v==='calendario');
-  document.getElementById('view-resumo').classList.toggle('active',v==='resumo');
-  document.getElementById('nav-cal').classList.toggle('active',v==='calendario');
-  document.getElementById('nav-res').classList.toggle('active',v==='resumo');
-  if(v==='resumo')renderResumo();
+
+  document.getElementById('view-calendario')?.classList.toggle('active',v==='calendario')
+  document.getElementById('view-resumo')?.classList.toggle('active',v==='resumo')
+
+  document.getElementById('nav-cal')?.classList.toggle('active',v==='calendario')
+  document.getElementById('nav-res')?.classList.toggle('active',v==='resumo')
+
+  if(v==='resumo'){
+    renderResumo()
+  }
+
 }
-function renderAll(){renderDispatch();renderGantt();renderSidebar();renderResumo();}
+
+function renderAll(){
+  renderDispatch()
+  renderGantt()
+  renderSidebar()
+  renderResumo()
+}
+
 
 // ── HELPERS ─────────────────────────────────────────────────────
-function fmt(d){const[y,m,dd]=d.split('-');return`${dd}/${m}`;}
-function fmtFull(d){const[y,m,dd]=d.split('-');return`${dd}/${m}/${y}`;}
-function toDate(s){return new Date(s+'T00:00:00');}
-function toStr(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
-function getStatus(c){
-  const today=new Date();today.setHours(0,0,0,0);
-  const todayStr=toStr(today);
-  if(c.fim<todayStr)return{label:'Encerrada',color:'var(--gray-400)'};
-  if(c.inicio>todayStr)return{label:'Em Breve',color:'var(--purple)'};
-  const diff=Math.round((toDate(c.fim)-today)/86400000);
-  if(diff<=2)return{label:`🔥 Encerra em ${diff} dia${diff!==1?'s':''}`,color:'var(--red)'};
-  return{label:`Ativa · ${diff} dias restantes`,color:'var(--green)'};
+function fmt(d){
+  const [y,m,dd] = d.split('-')
+  return `${dd}/${m}`
 }
+
+function fmtFull(d){
+  const [y,m,dd] = d.split('-')
+  return `${dd}/${m}/${y}`
+}
+
+function toDate(s){
+  return new Date(s + 'T00:00:00')
+}
+
+function toStr(d){
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`
+}
+
+function getStatus(c){
+
+  const today = new Date()
+  today.setHours(0,0,0,0)
+
+  const todayStr = toStr(today)
+
+  if(c.fim < todayStr){
+    return {label:'Encerrada',color:'var(--gray-400)'}
+  }
+
+  if(c.inicio > todayStr){
+    return {label:'Em Breve',color:'var(--purple)'}
+  }
+
+  const diff = Math.round((toDate(c.fim) - today) / 86400000)
+
+  if(diff <= 2){
+    return {label:`🔥 Encerra em ${diff} dia${diff!==1?'s':''}`,color:'var(--red)'}
+  }
+
+  return {label:`Ativa · ${diff} dias restantes`,color:'var(--green)'}
+
+}
+
 
 // ── CHANGE MONTH ────────────────────────────────────────────────
 function changeMonth(d){
-  currentMonth+=d;
-  if(currentMonth>11){currentMonth=0;currentYear++;}
-  if(currentMonth<0){currentMonth=11;currentYear--;}
-  renderAll();
-}
 
+  currentMonth += d
+
+  if(currentMonth > 11){
+    currentMonth = 0
+    currentYear++
+  }
+
+  if(currentMonth < 0){
+    currentMonth = 11
+    currentYear--
+  }
+
+  renderAll()
+
+}
 // ── DISPATCH CALENDAR (Mon–Fri only) ────────────────────────────
 function renderDispatch(){
   document.getElementById('cal-month-label').textContent=`${MONTHS_PT[currentMonth]} ${currentYear}`;
