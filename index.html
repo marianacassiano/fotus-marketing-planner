@@ -138,7 +138,7 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .cal-nav{display:flex;gap:6px;}
 .cal-nav button{width:30px;height:30px;border-radius:8px;border:1.5px solid var(--gray-200);background:white;cursor:pointer;font-size:15px;color:var(--gray-600);display:flex;align-items:center;justify-content:center;transition:background .15s;}
 .cal-nav button:hover{background:var(--gray-100);}
-.week-row{display:grid;grid-template-columns:repeat(5,1fr);border-top:2px solid var(--gray-200);}
+.week-row{display:grid;grid-template-columns:repeat(7,1fr);border-top:2px solid var(--gray-200);}
 .week-row.header{border-top:none;}
 .week-header-cell{padding:8px 6px;font-size:11px;font-weight:700;letter-spacing:.07em;text-transform:uppercase;color:var(--gray-400);text-align:left;border-right:1px solid var(--gray-100);}
 .week-header-cell:last-child{border-right:none;}
@@ -1081,39 +1081,17 @@ function renderDispatch(){
   WEEKDAYS.forEach(n=>{const h=document.createElement('div');h.className='week-header-cell';h.textContent=n;hrow.appendChild(h);});
   cont.appendChild(hrow);
   const filtered=getFiltered('cal');
-  let week=[];for(let i=0;i<firstDay;i++){week.push(null);}
-  for(let d=1;d<=dim;d++){
-    const dt=new Date(currentYear,currentMonth,d);
-    const str=toStr(dt);
-    week.push({d,str});
-    if(week.length===7){
-      const row=document.createElement('div');row.className='week-row';
-      week.forEach(day=>{
-        const cell=document.createElement('div');cell.className='day-cell';
-        if(!day){cell.classList.add('empty');row.appendChild(cell);return;}
-        if(day.d===today.getDate()&&currentMonth===today.getMonth()&&currentYear===today.getFullYear())cell.classList.add('today');
-        cell.innerHTML='<div class="day-num">'+day.d+'</div>';
-        filtered.forEach(cp=>{
-          [[cp.inbound.wa,'WPP',0],[cp.inbound.email,'EMM',18],[cp.inbound.sms,'SMS',35],[cp.rede_social.instagram,'IGM',52],[cp.rede_social.facebook,'FBM',70],[cp.performance.instagram_ads,'IGA',88]].forEach(([dates,lbl,dk])=>{
-            if((dates||[]).includes(day.str)){
-              const bar=document.createElement('div');bar.className='dispatch-bar';
-              bar.style.background=darken(cp.color,dk);bar.textContent=cp.name+' ['+lbl+']';bar.title=cp.name+' ['+lbl+']';
-              bar.onclick=()=>openDetailModal(cp.id);cell.appendChild(bar);
-            }
-          });
-        });
-        row.appendChild(cell);
-      });
-      cont.appendChild(row);
-      week=[];
-    }
-  }
-  if(week.length>0){
-    while(week.length<7){week.push(null);}
+  const allDays=[];
+  for(let i=0;i<firstDay;i++){allDays.push(null);}
+  for(let d=1;d<=dim;d++){const dt=new Date(currentYear,currentMonth,d);allDays.push({d,str:toStr(dt)});}
+  const lastDay=new Date(currentYear,currentMonth,dim).getDay();
+  for(let i=lastDay+1;i<7;i++){allDays.push(null);}
+  for(let i=0;i<allDays.length;i+=7){
     const row=document.createElement('div');row.className='week-row';
-    week.forEach(day=>{
+    for(let j=0;j<7;j++){
+      const day=allDays[i+j];
       const cell=document.createElement('div');cell.className='day-cell';
-      if(!day){cell.classList.add('empty');row.appendChild(cell);return;}
+      if(!day){cell.classList.add('empty');row.appendChild(cell);continue;}
       if(day.d===today.getDate()&&currentMonth===today.getMonth()&&currentYear===today.getFullYear())cell.classList.add('today');
       cell.innerHTML='<div class="day-num">'+day.d+'</div>';
       filtered.forEach(cp=>{
@@ -1126,7 +1104,7 @@ function renderDispatch(){
         });
       });
       row.appendChild(cell);
-    });
+    }
     cont.appendChild(row);
   }
 }
