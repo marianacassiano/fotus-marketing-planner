@@ -505,26 +505,23 @@ function toBR(dateISO){
 
 // ── AUTH ────────────────────────────────────────────────────────
 function doLogin(){
-  const email=document.getElementById('inp-email').value
-  const senha=document.getElementById('inp-senha').value
 
-  const user=USERS.find(u=>u.email===email && u.senha===senha)
+  const email = document.getElementById('inp-email').value
+  const senha = document.getElementById('inp-senha').value
+
+  const user = USERS.find(u => u.email === email && u.senha === senha)
 
   if(!user){
-    alert("Usuário ou senha inválidos")
+    document.getElementById('login-error').style.display = 'block'
     return
   }
 
-  currentUser=user
-  document.getElementById("login-screen").style.display="none"
-  document.getElementById("app").style.display="block"
+  currentUser = user
+
+  document.getElementById("login-screen").style.display = "none"
+  document.getElementById("app").style.display = "block"
 
   renderCalendar()
-}
-  } 
-  else {
-    document.getElementById('login-error').style.display='block';
-  }
 }
 function doLogout(){
   document.getElementById('app').style.display='none';
