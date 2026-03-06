@@ -1267,11 +1267,29 @@ function deleteUser(userId){
 // ── EXPORTAR ──────────────────────────────────────────────────────
 function exportarCalendario(){
   const mes=MONTHS_PT[currentMonth],ano=currentYear;
-  const rows=getFiltered('cal').map(c=>'<tr><td><strong>'+c.name+'</strong></td><td>'+(CAT_LABELS[c.categoria]||c.categoria)+'</td><td>'+fmtFull(c.inicio)+' – '+fmtFull(c.fim)+'</td><td>'+((c.wa||[]).map(fmtFull).join(', ')||'—')+'</td><td>'+((c.email||[]).map(fmtFull).join(', ')||'—')+'</td><td>'+((c.sms||[]).map(fmtFull).join(', ')||'—')+'</td></tr>').join('');
-  const html='<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Calendário '+mes+' '+ano+'</title><style>body{font-family:Arial,sans-serif;padding:24px;}h1{font-size:20px;margin-bottom:18px;}table{width:100%;border-collapse:collapse;font-size:12px;}th{background:#F0F2F7;padding:10px;text-align:left;font-size:10px;text-transform:uppercase;border:1px solid #E2E6EF;}td{padding:10px;border:1px solid #E2E6EF;vertical-align:top;}tr:nth-child(even) td{background:#F8F9FC;}</style></head><body><h1>Calendário · '+mes+' '+ano+' · Fotus</h1><table><thead><tr><th>Campanha</th><th>Categoria</th><th>Vigência</th><th>WhatsApp</th><th>E-mail</th><th>SMS</th></tr></thead><tbody>'+rows+'</tbody></table></body></html>';
+  const campaigns=getFiltered('cal');
+  const headers=['Campanha','Categoria','Vigência','Tags','Inbound WA','Inbound Email','Inbound SMS','Rede Social Instagram','Rede Social Facebook','Rede Social LinkedIn','Rede Social Blog','Rede Social Outros','Performance Instagram Ads','Performance Facebook Ads','Performance Google Ads'];
+  const rows=campaigns.map(c=>[
+    c.name,
+    CAT_LABELS[c.categoria]||c.categoria,
+    fmtFull(c.inicio)+' – '+fmtFull(c.fim),
+    c.tags||'',
+    (c.inbound.wa||[]).map(fmtFull).join('; ')||'',
+    (c.inbound.email||[]).map(fmtFull).join('; ')||'',
+    (c.inbound.sms||[]).map(fmtFull).join('; ')||'',
+    (c.rede_social.instagram||[]).map(fmtFull).join('; ')||'',
+    (c.rede_social.facebook||[]).map(fmtFull).join('; ')||'',
+    (c.rede_social.linkedin||[]).map(fmtFull).join('; ')||'',
+    (c.rede_social.blog||[]).map(fmtFull).join('; ')||'',
+    (c.rede_social.outros||[]).map(fmtFull).join('; ')||'',
+    (c.performance.instagram_ads||[]).map(fmtFull).join('; ')||'',
+    (c.performance.facebook_ads||[]).map(fmtFull).join('; ')||'',
+    (c.performance.google_ads||[]).map(fmtFull).join('; ')||''
+  ]);
+  const csv=[headers,...rows].map(row=>row.map(cell=>'"'+String(cell).replace(/"/g,'""')+'"').join(',')).join('\n');
   const a=document.createElement('a');
-  a.setAttribute('href','data:text/html;charset=utf-8,'+encodeURIComponent(html));
-  a.setAttribute('download','calendario-fotus-'+mes.toLowerCase()+'-'+ano+'.html');
+  a.setAttribute('href','data:text/csv;charset=utf-8,'+encodeURIComponent(csv));
+  a.setAttribute('download','calendario-fotus-'+mes.toLowerCase()+'-'+ano+'.csv');
   a.style.display='none';document.body.appendChild(a);a.click();
   setTimeout(()=>document.body.removeChild(a),100);
 }
