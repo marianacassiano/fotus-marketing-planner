@@ -192,7 +192,7 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <p class="subtitle">Marketing Planner Fotus</p>
     <input class="inp" type="email" id="inp-email" placeholder="E-mail">
     <input class="inp" type="password" id="inp-senha" placeholder="Senha">
-    <button onclick="login()">ENTRAR</button>
+    <button onclick="doLogin()">ENTRAR</button>
     <p class="login-error" id="login-error">E-mail ou senha incorretos.</p>
   </div>
 </div>
@@ -504,11 +504,12 @@ function toBR(dateISO){
 ];
 
 // ── AUTH ────────────────────────────────────────────────────────
-// ── LOGIN ───────────────────────────────────────────────────────
-function doLogin(){
+
+  function doLogin(){
 
   const emailInput = document.getElementById('inp-email')
   const senhaInput = document.getElementById('inp-senha')
+  const erro = document.getElementById('login-error')
 
   if(!emailInput || !senhaInput){
     console.error("Campos de login não encontrados")
@@ -522,6 +523,30 @@ function doLogin(){
     alert("Digite email e senha")
     return
   }
+
+  const user = USERS.find(function(u){
+    return u.email === email && u.senha === senha
+  })
+
+  if(!user){
+    if(erro){
+      erro.style.display = "block"
+    }else{
+      alert("Usuário ou senha inválidos")
+    }
+    return
+  }
+
+  currentUser = user
+
+  const loginScreen = document.getElementById("login-screen")
+  const app = document.getElementById("app")
+
+  if(loginScreen) loginScreen.style.display = "none"
+  if(app) app.style.display = "block"
+
+  renderCalendar()
+}
 
   const user = USERS.find(u => u.email === email && u.senha === senha)
 
