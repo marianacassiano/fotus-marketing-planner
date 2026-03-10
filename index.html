@@ -1404,19 +1404,19 @@ function renderWeekRow(week,filtered,cont,today){
           bar.className='dispatch-bar'+((isCampCancelada||isDisparoCancelado)?' cancelada':'');
           if(isCampCancelada){
             bar.style.borderColor=cp.color;
-            bar.textContent='❌ '+lbl;
+            bar.textContent='❌ '+cp.name+' · '+lbl;
             bar.title='Campanha cancelada · '+cp.name+' · '+lbl;
           }else if(isDisparoCancelado){
             bar.style.borderColor=cp.color;
-            bar.textContent='🚫 '+lbl;
+            bar.textContent='🚫 '+cp.name+' · '+lbl;
             bar.title='Ação cancelada'+(motivoDisp?' · '+motivoDisp:'')+' · '+cp.name+' · '+lbl;
           }else if(isAdiada){
             bar.style.background='#FFB74D';
-            bar.textContent='⏳ '+lbl;
+            bar.textContent='⏳ '+cp.name+' · '+lbl;
             bar.title='Campanha adiada · '+cp.name+' · '+lbl;
           }else{
             bar.style.background=darken(cp.color,dk);
-            bar.textContent=lbl;
+            bar.textContent=cp.name+' · '+lbl;
             bar.title=cp.name+' · '+lbl;
           }
           bar.onclick=()=>openDetailModal(cp.id);cell.appendChild(bar);
