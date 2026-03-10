@@ -323,6 +323,28 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .canal-tag{display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--gray-600);}
 .canal-tag .dot{width:7px;height:7px;border-radius:50%;}
 
+/* DASHBOARD INSIGHTS */
+.status-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);}
+.status-stat-row:last-child{border-bottom:none;}
+.status-stat-badge{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:600;}
+.status-stat-count{font-size:22px;font-weight:700;}
+.canal-rank-row{display:flex;align-items:center;gap:10px;padding:6px 0;}
+.canal-rank-num{font-size:11px;font-weight:700;color:var(--gray-400);width:16px;text-align:center;}
+.canal-rank-bar-wrap{flex:1;}
+.canal-rank-bar{height:8px;border-radius:4px;transition:width .3s;}
+.canal-rank-label{font-size:11px;font-weight:600;color:var(--gray-600);min-width:80px;}
+.canal-rank-val{font-size:12px;font-weight:700;color:var(--gray-800);min-width:28px;text-align:right;}
+.hoje-item{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:10px;background:var(--gray-50);margin-bottom:6px;}
+.hoje-item-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0;}
+.hoje-item-info{flex:1;}
+.hoje-item-nome{font-size:12px;font-weight:700;color:var(--gray-800);}
+.hoje-item-canal{font-size:11px;color:var(--gray-400);}
+.sem-acao-item{display:flex;align-items:center;gap:8px;padding:7px 0;border-bottom:1px solid var(--gray-100);}
+.sem-acao-item:last-child{border-bottom:none;}
+.sem-acao-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.sem-acao-nome{font-size:12px;font-weight:600;color:var(--gray-800);}
+.sem-acao-vig{font-size:10px;color:var(--gray-400);font-family:'DM Mono',monospace;}
+
 /* STATUS BADGES */
 .status-bar{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap;}
 .status-opt{padding:9px 18px;border-radius:10px;border:1.5px solid var(--gray-200);background:white;font-family:'Sora',sans-serif;font-size:12px;font-weight:700;cursor:pointer;transition:all .15s;color:var(--gray-600);display:flex;align-items:center;gap:6px;}
@@ -570,6 +592,14 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <div class="dash-row">
       <div class="dash-card"><h3>Próximas a Encerrar</h3><div id="dash-encerrar"></div></div>
       <div class="dash-card"><h3>Próximas Ações</h3><div id="dash-disparos"></div></div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card"><h3>Campanhas por Status</h3><div id="dash-status-bars"></div></div>
+      <div class="dash-card"><h3>Canal Mais Utilizado</h3><div id="dash-canal-rank"></div></div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card" style="flex:2"><h3>⚠️ Ações para Hoje</h3><div id="dash-hoje"></div></div>
+      <div class="dash-card" style="flex:1"><h3>⚠️ Campanhas sem Ações</h3><div id="dash-sem-acoes"></div></div>
     </div>
   </div>
 
@@ -1541,6 +1571,8 @@ function renderResumoCalendar(){
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
 function renderDashboard(){
+  // Consolidar dados do mês atual em background
+  setTimeout(()=>consolidarMesAtual(),1500);
   const today=new Date();today.setHours(0,0,0,0);const ts=toStr(today);
   const all=campaigns;
   const ativas=all.filter(c=>c.inicio<=ts&&c.fim>=ts);
@@ -1569,7 +1601,137 @@ function renderDashboard(){
     (c.performance?.google_ads||[]).forEach(d=>{if(d>=ts)disp.push({nome:c.name,canal:'Google Ads [PERF-GOO]',color:'#4285F4',data:d,cat:c.categoria});});
   });
   disp.sort((a,b)=>a.data.localeCompare(b.data));
-  document.getElementById('dash-disparos').innerHTML=disp.slice(0,6).map(d=>'<div class="timeline-item"><div class="timeline-dot" style="background:'+d.color+'"></div><div class="timeline-content"><div class="timeline-name">'+d.nome+' '+catBadge(d.cat)+'</div><div class="timeline-date">'+d.canal+' · '+fmtFull(d.data)+'</div></div></div>').join('')||'<p style="color:var(--gray-400);font-size:12px;">Nenhum disparo futuro.</p>';
+  document.getElementById('dash-disparos').innerHTML=disp.slice(0,6).map(d=>'<div class="timeline-item"><div class="timeline-dot" style="background:'+d.color+'"></div><div class="timeline-content"><div class="timeline-name">'+d.nome+' '+catBadge(d.cat)+'</div><div class="timeline-date">'+d.canal+' · '+fmtFull(d.data)+'</div></div></div>').join('')||'<p style="color:var(--gray-400);font-size:12px;">Nenhuma ação futura.</p>';
+
+  // ── INSIGHT 1: Campanhas por Status ──
+  const stAtivaCount=all.filter(c=>c.status==='ativa'&&c.inicio<=ts&&c.fim>=ts).length;
+  const stAdiada=all.filter(c=>c.status==='adiada').length;
+  const stCancelada=all.filter(c=>c.status==='cancelada').length;
+  const stEncerrada=all.filter(c=>c.status!=='cancelada'&&c.fim<ts).length;
+  const stBreve=all.filter(c=>c.status==='ativa'&&c.inicio>ts).length;
+  document.getElementById('dash-status-bars').innerHTML=[
+    {label:'✅ Ativas agora',  count:stAtivaCount, color:'var(--green)'},
+    {label:'🔜 Em breve',      count:stBreve,      color:'var(--purple)'},
+    {label:'⏳ Adiadas',       count:stAdiada,     color:'#FB8C00'},
+    {label:'❌ Canceladas',    count:stCancelada,  color:'var(--red)'},
+    {label:'⬜ Encerradas',    count:stEncerrada,  color:'var(--gray-400)'},
+  ].map(s=>'<div class="status-stat-row"><span class="status-stat-badge" style="color:'+s.color+'">'+s.label+'</span><span class="status-stat-count" style="color:'+s.color+'">'+s.count+'</span></div>').join('');
+
+  // ── INSIGHT 2: Ranking de canal mais utilizado ──
+  const canalRank=[
+    {nome:'WhatsApp',  cor:'#25D366', total:wa},
+    {nome:'E-mail',    cor:'#2196F3', total:em},
+    {nome:'Instagram', cor:'#E91E63', total:ig},
+    {nome:'Meta Ads',  cor:'#1877F2', total:ma},
+    {nome:'LinkedIn',  cor:'#0A66C2', total:li},
+    {nome:'Facebook',  cor:'#1877F2', total:fb},
+    {nome:'Google Ads',cor:'#4285F4', total:ga},
+    {nome:'SMS',       cor:'#FF9800', total:sm},
+    {nome:'Blog',      cor:'#6B5CE7', total:bl},
+    {nome:'Outros',    cor:'#999',    total:ou},
+  ].filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
+  const maxRank=canalRank.length>0?canalRank[0].total:1;
+  document.getElementById('dash-canal-rank').innerHTML=canalRank.length?canalRank.map((c,i)=>'<div class="canal-rank-row"><span class="canal-rank-num">'+(i+1)+'</span><span class="canal-rank-label">'+c.nome+'</span><div class="canal-rank-bar-wrap"><div class="canal-rank-bar" style="width:'+Math.round(c.total/maxRank*100)+'%;background:'+c.cor+'"></div></div><span class="canal-rank-val">'+c.total+'</span></div>').join(''):'<p style="color:var(--gray-400);font-size:12px;">Nenhuma ação cadastrada.</p>';
+
+  // ── INSIGHT 3: Ações para hoje ──
+  const hoje=[];
+  const canalMap=[
+    [c=>c.inbound?.wa||[],'WhatsApp','#25D366'],
+    [c=>c.inbound?.email||[],'E-mail','#2196F3'],
+    [c=>c.inbound?.sms||[],'SMS','#FF9800'],
+    [c=>c.rede_social?.instagram||[],'Instagram','#E91E63'],
+    [c=>c.rede_social?.facebook||[],'Facebook','#1877F2'],
+    [c=>c.rede_social?.linkedin||[],'LinkedIn','#0A66C2'],
+    [c=>c.rede_social?.blog||[],'Blog','#6B5CE7'],
+    [c=>c.rede_social?.outros||[],'Outros','#999'],
+    [c=>c.performance?.meta_ads||[],'Meta Ads','#1877F2'],
+    [c=>c.performance?.google_ads||[],'Google Ads','#4285F4'],
+  ];
+  all.forEach(c=>{
+    canalMap.forEach(([getter,nome,cor])=>{
+      if((getter(c)||[]).includes(ts)) hoje.push({campanha:c.name,color:c.color,canal:nome,cor});
+    });
+  });
+  document.getElementById('dash-hoje').innerHTML=hoje.length
+    ?hoje.map(h=>'<div class="hoje-item"><div class="hoje-item-dot" style="background:'+h.color+'"></div><div class="hoje-item-info"><div class="hoje-item-nome">'+h.campanha+'</div><div class="hoje-item-canal">'+h.canal+'</div></div><div class="canal-stat-dot" style="background:'+h.cor+';width:8px;height:8px;border-radius:50%;"></div></div>').join('')
+    :'<p style="color:var(--gray-400);font-size:12px;">Nenhuma ação programada para hoje.</p>';
+
+  // ── INSIGHT 4: Campanhas sem ações cadastradas ──
+  const semAcoes=all.filter(c=>{
+    if(c.status==='cancelada'||c.fim<ts) return false;
+    const total=canalMap.reduce((s,[getter])=>s+(getter(c)||[]).length,0);
+    return total===0;
+  });
+  document.getElementById('dash-sem-acoes').innerHTML=semAcoes.length
+    ?semAcoes.map(c=>'<div class="sem-acao-item"><div class="sem-acao-dot" style="background:'+c.color+'"></div><div><div class="sem-acao-nome">'+c.name+'</div><div class="sem-acao-vig">'+fmt(c.inicio)+' – '+fmt(c.fim)+'</div></div></div>').join('')
+    :'<p style="color:var(--green);font-size:12px;font-weight:600;">✅ Todas as campanhas têm ações.</p>';
+}
+
+// ── CONSOLIDAÇÃO MENSAL ───────────────────────────────────────────
+async function consolidarMes(mesRef){
+  // mesRef: 'YYYY-MM' — padrão do mes_ref das campanhas
+  const [ano, mes] = mesRef.split('-').map(Number);
+  const ms = mesRef+'-01';
+  const me = mesRef+'-'+String(new Date(ano,mes,0).getDate()).padStart(2,'0');
+  const today = toStr(new Date());
+
+  const do_mes = campaigns.filter(c=>c.mes_ref&&c.mes_ref===mesRef);
+  const all_no_mes = campaigns.filter(c=>c.inicio<=me&&c.fim>=ms);
+
+  const canalMap = [
+    [c=>c.inbound?.wa||[],     'whatsapp'],
+    [c=>c.inbound?.email||[],  'email'],
+    [c=>c.inbound?.sms||[],    'sms'],
+    [c=>c.rede_social?.instagram||[], 'instagram'],
+    [c=>c.rede_social?.facebook||[],  'facebook'],
+    [c=>c.rede_social?.linkedin||[],  'linkedin'],
+    [c=>c.rede_social?.blog||[],      'blog'],
+    [c=>c.rede_social?.outros||[],    'outros'],
+    [c=>c.performance?.meta_ads||[],  'meta_ads'],
+    [c=>c.performance?.google_ads||[],'google_ads'],
+  ];
+
+  const payload = {
+    mes_ref: mesRef,
+    total_campanhas:      all_no_mes.length,
+    campanhas_ativas:     all_no_mes.filter(c=>c.status==='ativa'&&c.inicio<=today&&c.fim>=today).length,
+    campanhas_em_breve:   all_no_mes.filter(c=>c.status==='ativa'&&c.inicio>today).length,
+    campanhas_encerradas: all_no_mes.filter(c=>c.status!=='cancelada'&&c.fim<today).length,
+    campanhas_adiadas:    all_no_mes.filter(c=>c.status==='adiada').length,
+    campanhas_canceladas: all_no_mes.filter(c=>c.status==='cancelada').length,
+    campanhas_sem_acoes:  all_no_mes.filter(c=>{
+      if(c.status==='cancelada'||c.fim<today) return false;
+      return canalMap.reduce((s,[g])=>s+(g(c)||[]).length,0)===0;
+    }).length,
+    acoes_whatsapp:   all_no_mes.reduce((s,c)=>s+(c.inbound?.wa||[]).length,0),
+    acoes_email:      all_no_mes.reduce((s,c)=>s+(c.inbound?.email||[]).length,0),
+    acoes_sms:        all_no_mes.reduce((s,c)=>s+(c.inbound?.sms||[]).length,0),
+    acoes_instagram:  all_no_mes.reduce((s,c)=>s+(c.rede_social?.instagram||[]).length,0),
+    acoes_facebook:   all_no_mes.reduce((s,c)=>s+(c.rede_social?.facebook||[]).length,0),
+    acoes_linkedin:   all_no_mes.reduce((s,c)=>s+(c.rede_social?.linkedin||[]).length,0),
+    acoes_blog:       all_no_mes.reduce((s,c)=>s+(c.rede_social?.blog||[]).length,0),
+    acoes_outros:     all_no_mes.reduce((s,c)=>s+(c.rede_social?.outros||[]).length,0),
+    acoes_meta_ads:   all_no_mes.reduce((s,c)=>s+(c.performance?.meta_ads||[]).length,0),
+    acoes_google_ads: all_no_mes.reduce((s,c)=>s+(c.performance?.google_ads||[]).length,0),
+    total_acoes:      all_no_mes.reduce((s,c)=>s+canalMap.reduce((t,[g])=>t+(g(c)||[]).length,0),0),
+    campanhas_comercial: all_no_mes.filter(c=>getCats(c).includes('COMERCIAL')).length,
+    campanhas_conteudo:  all_no_mes.filter(c=>getCats(c).includes('CONTEUDO')).length,
+    campanhas_eventos:   all_no_mes.filter(c=>getCats(c).includes('EVENTOS')).length,
+    atualizado_em: new Date().toISOString()
+  };
+
+  try{
+    // Upsert: atualiza se já existe, insere se não
+    await sbFetch('dashboard_mensal?mes_ref=eq.'+mesRef,'DELETE');
+    await sbFetch('dashboard_mensal','POST',payload);
+  }catch(e){
+    console.warn('Erro ao consolidar mês '+mesRef+':',e.message);
+  }
+}
+
+async function consolidarMesAtual(){
+  const mesRef = currentYear+'-'+String(currentMonth+1).padStart(2,'0');
+  await consolidarMes(mesRef);
 }
 
 // ── USUARIOS ──────────────────────────────────────────────────────
