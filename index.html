@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>FOTUS: PLANNER MARKETING</title>
 <link rel="icon" href="https://energia.fotus.com.br/wp-content/uploads/2025/02/LOGO_Fotus-1A-e1739992227141.png" type="image/png">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
 :root{
@@ -323,6 +324,21 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .canal-tag{display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--gray-600);}
 .canal-tag .dot{width:7px;height:7px;border-radius:50%;}
 
+/* DASHBOARD FILTRO PERÍODO */
+.dash-periodo{background:white;border-radius:14px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
+.dash-periodo label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);white-space:nowrap;}
+.dash-periodo input[type=date]{padding:8px 12px;border:1.5px solid var(--gray-200);border-radius:8px;font-family:'Sora',sans-serif;font-size:12px;color:var(--gray-800);outline:none;cursor:pointer;}
+.dash-periodo input[type=date]:focus{border-color:var(--purple-light);}
+.dash-atalhos{display:flex;gap:6px;flex-wrap:wrap;margin-left:8px;}
+.btn-atalho{padding:6px 12px;border-radius:8px;border:1.5px solid var(--gray-200);background:white;font-family:'Sora',sans-serif;font-size:11px;font-weight:600;cursor:pointer;color:var(--gray-600);transition:all .15s;white-space:nowrap;}
+.btn-atalho:hover{border-color:var(--purple-light);color:var(--purple);}
+.btn-atalho.ativo{background:var(--purple);border-color:var(--purple);color:white;}
+.dash-periodo-sep{color:var(--gray-300);font-size:16px;}
+
+/* CHARTS */
+.dash-chart-wrap{position:relative;width:100%;height:200px;}
+.dash-chart-wrap canvas{width:100%!important;}
+
 /* DASHBOARD INSIGHTS */
 .status-stat-row{display:flex;align-items:center;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--gray-100);}
 .status-stat-row:last-child{border-bottom:none;}
@@ -580,26 +596,59 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 
   <!-- DASHBOARD -->
   <div class="view" id="view-dashboard">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
       <h2 style="font-size:24px;font-weight:700;">Dashboard de Marketing</h2>
       <button class="btn-export" onclick="exportarDashboard()">📥 Exportar Dashboard</button>
     </div>
+
+    <!-- FILTRO DE PERÍODO -->
+    <div class="dash-periodo">
+      <label>Período</label>
+      <input type="date" id="dash-de" onchange="renderDashboard()">
+      <span class="dash-periodo-sep">→</span>
+      <input type="date" id="dash-ate" onchange="renderDashboard()">
+      <div class="dash-atalhos">
+        <button class="btn-atalho" onclick="setDashPeriodo('mes')" id="atalho-mes">Mês Atual</button>
+        <button class="btn-atalho" onclick="setDashPeriodo('30d')" id="atalho-30d">Últimos 30 dias</button>
+        <button class="btn-atalho" onclick="setDashPeriodo('3m')" id="atalho-3m">Últimos 3 meses</button>
+        <button class="btn-atalho" onclick="setDashPeriodo('ano')" id="atalho-ano">Este ano</button>
+      </div>
+    </div>
+
     <div class="dash-kpis" id="dash-kpis"></div>
+
+    <!-- GRÁFICOS: linha de evolução + donut categoria -->
     <div class="dash-row">
-      <div class="dash-card"><h3>Campanhas por Categoria</h3><div id="dash-cat-bars"></div></div>
-      <div class="dash-card"><h3>Ações por Canal</h3><div id="dash-canal-stats"></div></div>
+      <div class="dash-card" style="grid-column:span 2">
+        <h3>Evolução de Ações no Período</h3>
+        <div class="dash-chart-wrap" style="height:220px;"><canvas id="chart-evolucao"></canvas></div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card">
+        <h3>Campanhas por Categoria</h3>
+        <div class="dash-chart-wrap" style="height:200px;"><canvas id="chart-categoria"></canvas></div>
+      </div>
+      <div class="dash-card">
+        <h3>Campanhas por Status</h3>
+        <div class="dash-chart-wrap" style="height:200px;"><canvas id="chart-status"></canvas></div>
+      </div>
+    </div>
+    <div class="dash-row">
+      <div class="dash-card" style="grid-column:span 2">
+        <h3>Ações por Canal</h3>
+        <div class="dash-chart-wrap" style="height:240px;"><canvas id="chart-canais"></canvas></div>
+      </div>
     </div>
     <div class="dash-row">
       <div class="dash-card"><h3>Próximas a Encerrar</h3><div id="dash-encerrar"></div></div>
       <div class="dash-card"><h3>Próximas Ações</h3><div id="dash-disparos"></div></div>
     </div>
     <div class="dash-row">
-      <div class="dash-card"><h3>Campanhas por Status</h3><div id="dash-status-bars"></div></div>
-      <div class="dash-card"><h3>Canal Mais Utilizado</h3><div id="dash-canal-rank"></div></div>
+      <div class="dash-card" style="grid-column:span 2"><h3>⚠️ Ações para Hoje</h3><div id="dash-hoje"></div></div>
     </div>
     <div class="dash-row">
-      <div class="dash-card" style="flex:2"><h3>⚠️ Ações para Hoje</h3><div id="dash-hoje"></div></div>
-      <div class="dash-card" style="flex:1"><h3>⚠️ Campanhas sem Ações</h3><div id="dash-sem-acoes"></div></div>
+      <div class="dash-card" style="grid-column:span 2"><h3>⚠️ Campanhas sem Ações</h3><div id="dash-sem-acoes"></div></div>
     </div>
   </div>
 
@@ -1353,10 +1402,13 @@ function showView(v){
   document.getElementById('nav-dash').classList.toggle('active',v==='dashboard');
   document.getElementById('nav-usuarios').classList.toggle('active',v==='usuarios');
   if(v==='resumo')renderResumo();
-  if(v==='dashboard')renderDashboard();
+  if(v==='dashboard'){initDashPeriodo();renderDashboard();}
   if(v==='usuarios')renderUsuarios();
 }
-function renderAll(){renderDispatch();renderGantt();renderSidebar();renderResumo();if(document.getElementById('view-dashboard').classList.contains('active'))renderDashboard();}
+function renderAll(){renderDispatch();renderGantt();renderSidebar();renderResumo();if(document.getElementById('view-dashboard').classList.contains('active')){
+    initDashPeriodo();
+    renderDashboard();
+  }}
 
 // ── HELPERS ───────────────────────────────────────────────────────
 function fmt(d){const[y,m,dd]=d.split('-');return dd+'/'+m;}
@@ -1570,21 +1622,67 @@ function renderResumoCalendar(){
 }
 
 // ── DASHBOARD ─────────────────────────────────────────────────────
+// ── PERÍODO DO DASHBOARD ─────────────────────────────────────────
+let _dashAtalhoAtivo = 'mes';
+
+function setDashPeriodo(tipo){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const ts = toStr(today);
+  let de, ate = ts;
+
+  if(tipo==='mes'){
+    de = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-01';
+    const lastDay = new Date(today.getFullYear(), today.getMonth()+1, 0);
+    ate = toStr(lastDay);
+  } else if(tipo==='30d'){
+    const d = new Date(today); d.setDate(d.getDate()-30);
+    de = toStr(d);
+  } else if(tipo==='3m'){
+    const d = new Date(today); d.setMonth(d.getMonth()-3);
+    de = toStr(d);
+  } else if(tipo==='ano'){
+    de = today.getFullYear()+'-01-01';
+    ate = today.getFullYear()+'-12-31';
+  }
+
+  document.getElementById('dash-de').value = de;
+  document.getElementById('dash-ate').value = ate;
+  _dashAtalhoAtivo = tipo;
+
+  // Highlight atalho ativo
+  ['mes','30d','3m','ano'].forEach(k=>{
+    const btn = document.getElementById('atalho-'+k);
+    if(btn) btn.classList.toggle('ativo', k===tipo);
+  });
+
+  renderDashboard();
+}
+
+function initDashPeriodo(){
+  const today = new Date(); today.setHours(0,0,0,0);
+  const de = today.getFullYear()+'-'+String(today.getMonth()+1).padStart(2,'0')+'-01';
+  const lastDay = new Date(today.getFullYear(), today.getMonth()+1, 0);
+  const ate = toStr(lastDay);
+  document.getElementById('dash-de').value = de;
+  document.getElementById('dash-ate').value = ate;
+  const btn = document.getElementById('atalho-mes');
+  if(btn) btn.classList.add('ativo');
+}
+
 function renderDashboard(){
   // Consolidar dados do mês atual em background
   setTimeout(()=>consolidarMesAtual(),1500);
   const today=new Date();today.setHours(0,0,0,0);const ts=toStr(today);
-  const all=campaigns;
-  const ativas=all.filter(c=>c.inicio<=ts&&c.fim>=ts);
-  const enc=all.filter(c=>c.fim<ts);const breve=all.filter(c=>c.inicio>ts);
-  const td=all.reduce((a,c)=>a+(c.inbound?.wa||[]).length+(c.inbound?.email||[]).length+(c.inbound?.sms||[]).length+(c.rede_social?.instagram||[]).length+(c.rede_social?.facebook||[]).length+(c.rede_social?.linkedin||[]).length+(c.rede_social?.blog||[]).length+(c.rede_social?.outros||[]).length+(c.performance?.meta_ads||[]).length+(c.performance?.google_ads||[]).length,0);
+
+  // ── Período selecionado ──
+  const de=document.getElementById('dash-de')?.value||'';
+  const ate=document.getElementById('dash-ate')?.value||ts;
+  const all=campaigns.filter(c=>c.fim>=de&&c.inicio<=ate);
   document.getElementById('dash-kpis').innerHTML='<div class="kpi-card"><div class="kpi-label">Total Campanhas</div><div class="kpi-value" style="color:var(--purple)">'+all.length+'</div><div class="kpi-sub">'+ativas.length+' ativas agora</div></div><div class="kpi-card"><div class="kpi-label">Ativas</div><div class="kpi-value" style="color:var(--green)">'+ativas.length+'</div><div class="kpi-sub">'+breve.length+' em breve</div></div><div class="kpi-card"><div class="kpi-label">Encerradas</div><div class="kpi-value" style="color:var(--gray-400)">'+enc.length+'</div><div class="kpi-sub">este período</div></div><div class="kpi-card"><div class="kpi-label">Total Ações</div><div class="kpi-value" style="color:var(--orange)">'+td+'</div><div class="kpi-sub">em todos os canais</div></div>';
+  // ── Dados de canais ──
   const cc={COMERCIAL:0,CONTEUDO:0,EVENTOS:0};all.forEach(c=>{getCats(c).forEach(cat=>{if(cc[cat]!==undefined)cc[cat]++;});});
-  const mx=Math.max(...Object.values(cc),1);
-  const ccol={COMERCIAL:'#1E88E5',CONTEUDO:'#43A047',EVENTOS:'#FB8C00'};
-  document.getElementById('dash-cat-bars').innerHTML=Object.entries(cc).map(([k,n])=>'<div class="bar-item"><div class="bar-label">'+CAT_LABELS[k]+'</div><div class="bar-track"><div class="bar-fill" style="width:'+Math.round(n/mx*100)+'%;background:'+ccol[k]+'"></div></div><div class="bar-count">'+n+'</div></div>').join('');
   const wa=all.reduce((a,c)=>a+(c.inbound?.wa||[]).length,0),em=all.reduce((a,c)=>a+(c.inbound?.email||[]).length,0),sm=all.reduce((a,c)=>a+(c.inbound?.sms||[]).length,0),ig=all.reduce((a,c)=>a+(c.rede_social?.instagram||[]).length,0),fb=all.reduce((a,c)=>a+(c.rede_social?.facebook||[]).length,0),li=all.reduce((a,c)=>a+(c.rede_social?.linkedin||[]).length,0),bl=all.reduce((a,c)=>a+(c.rede_social?.blog||[]).length,0),ou=all.reduce((a,c)=>a+(c.rede_social?.outros||[]).length,0),ma=all.reduce((a,c)=>a+(c.performance?.meta_ads||[]).length,0),ga=all.reduce((a,c)=>a+(c.performance?.google_ads||[]).length,0);
-  document.getElementById('dash-canal-stats').innerHTML='<div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#25D366"></div>WhatsApp</div><div><div class="canal-stat-num">'+wa+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#2196F3"></div>E-mail</div><div><div class="canal-stat-num">'+em+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#FF9800"></div>SMS</div><div><div class="canal-stat-num">'+sm+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#E91E63"></div>Instagram</div><div><div class="canal-stat-num">'+ig+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#1877F2"></div>Facebook</div><div><div class="canal-stat-num">'+fb+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#0A66C2"></div>LinkedIn</div><div><div class="canal-stat-num">'+li+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#6B5CE7"></div>Blog</div><div><div class="canal-stat-num">'+bl+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#999"></div>Outros</div><div><div class="canal-stat-num">'+ou+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#1877F2"></div>Meta Ads</div><div><div class="canal-stat-num">'+ma+'</div><div class="canal-stat-sub">ações</div></div></div><div class="canal-stat-row"><div class="canal-stat-name"><div class="canal-stat-dot" style="background:#4285F4"></div>Google Ads</div><div><div class="canal-stat-num">'+ga+'</div><div class="canal-stat-sub">ações</div></div></div>';
+  // canal stats replaced by chart below
   const pe=[...ativas].sort((a,b)=>a.fim.localeCompare(b.fim)).slice(0,5);
   document.getElementById('dash-encerrar').innerHTML=pe.length?pe.map(c=>{const diff=Math.round((toDate(c.fim)-today)/86400000);return'<div class="timeline-item"><div class="timeline-dot" style="background:'+c.color+'"></div><div class="timeline-content"><div class="timeline-name">'+c.name+' '+catBadge(c.categoria)+'</div><div class="timeline-date">Encerra '+fmtFull(c.fim)+' · '+(diff===0?'hoje':diff+' dia(s)')+'</div></div></div>';}).join(''):'<p style="color:var(--gray-400);font-size:12px;">Nenhuma campanha ativa.</p>';
   const disp=[];
@@ -1603,35 +1701,7 @@ function renderDashboard(){
   disp.sort((a,b)=>a.data.localeCompare(b.data));
   document.getElementById('dash-disparos').innerHTML=disp.slice(0,6).map(d=>'<div class="timeline-item"><div class="timeline-dot" style="background:'+d.color+'"></div><div class="timeline-content"><div class="timeline-name">'+d.nome+' '+catBadge(d.cat)+'</div><div class="timeline-date">'+d.canal+' · '+fmtFull(d.data)+'</div></div></div>').join('')||'<p style="color:var(--gray-400);font-size:12px;">Nenhuma ação futura.</p>';
 
-  // ── INSIGHT 1: Campanhas por Status ──
-  const stAtivaCount=all.filter(c=>c.status==='ativa'&&c.inicio<=ts&&c.fim>=ts).length;
-  const stAdiada=all.filter(c=>c.status==='adiada').length;
-  const stCancelada=all.filter(c=>c.status==='cancelada').length;
-  const stEncerrada=all.filter(c=>c.status!=='cancelada'&&c.fim<ts).length;
-  const stBreve=all.filter(c=>c.status==='ativa'&&c.inicio>ts).length;
-  document.getElementById('dash-status-bars').innerHTML=[
-    {label:'✅ Ativas agora',  count:stAtivaCount, color:'var(--green)'},
-    {label:'🔜 Em breve',      count:stBreve,      color:'var(--purple)'},
-    {label:'⏳ Adiadas',       count:stAdiada,     color:'#FB8C00'},
-    {label:'❌ Canceladas',    count:stCancelada,  color:'var(--red)'},
-    {label:'⬜ Encerradas',    count:stEncerrada,  color:'var(--gray-400)'},
-  ].map(s=>'<div class="status-stat-row"><span class="status-stat-badge" style="color:'+s.color+'">'+s.label+'</span><span class="status-stat-count" style="color:'+s.color+'">'+s.count+'</span></div>').join('');
-
-  // ── INSIGHT 2: Ranking de canal mais utilizado ──
-  const canalRank=[
-    {nome:'WhatsApp',  cor:'#25D366', total:wa},
-    {nome:'E-mail',    cor:'#2196F3', total:em},
-    {nome:'Instagram', cor:'#E91E63', total:ig},
-    {nome:'Meta Ads',  cor:'#1877F2', total:ma},
-    {nome:'LinkedIn',  cor:'#0A66C2', total:li},
-    {nome:'Facebook',  cor:'#1877F2', total:fb},
-    {nome:'Google Ads',cor:'#4285F4', total:ga},
-    {nome:'SMS',       cor:'#FF9800', total:sm},
-    {nome:'Blog',      cor:'#6B5CE7', total:bl},
-    {nome:'Outros',    cor:'#999',    total:ou},
-  ].filter(c=>c.total>0).sort((a,b)=>b.total-a.total);
-  const maxRank=canalRank.length>0?canalRank[0].total:1;
-  document.getElementById('dash-canal-rank').innerHTML=canalRank.length?canalRank.map((c,i)=>'<div class="canal-rank-row"><span class="canal-rank-num">'+(i+1)+'</span><span class="canal-rank-label">'+c.nome+'</span><div class="canal-rank-bar-wrap"><div class="canal-rank-bar" style="width:'+Math.round(c.total/maxRank*100)+'%;background:'+c.cor+'"></div></div><span class="canal-rank-val">'+c.total+'</span></div>').join(''):'<p style="color:var(--gray-400);font-size:12px;">Nenhuma ação cadastrada.</p>';
+  // status e rank replaced by charts below
 
   // ── INSIGHT 3: Ações para hoje ──
   const hoje=[];
@@ -1665,6 +1735,99 @@ function renderDashboard(){
   document.getElementById('dash-sem-acoes').innerHTML=semAcoes.length
     ?semAcoes.map(c=>'<div class="sem-acao-item"><div class="sem-acao-dot" style="background:'+c.color+'"></div><div><div class="sem-acao-nome">'+c.name+'</div><div class="sem-acao-vig">'+fmt(c.inicio)+' – '+fmt(c.fim)+'</div></div></div>').join('')
     :'<p style="color:var(--green);font-size:12px;font-weight:600;">✅ Todas as campanhas têm ações.</p>';
+
+  // ══ GRÁFICOS ══════════════════════════════════════════════════════
+
+  // Helper: destruir chart anterior se existir
+  function destroyChart(id){
+    const existing=Chart.getChart(id);
+    if(existing)existing.destroy();
+  }
+
+  // ── GRÁFICO 1: Evolução de ações no período (linha) ──
+  const allAcoes=[];
+  campaigns.forEach(c=>{
+    canalMap.forEach(([getter,nome,cor])=>{
+      (getter(c)||[]).forEach(d=>{
+        if((!de||d>=de)&&d<=ate) allAcoes.push({data:d,canal:nome});
+      });
+    });
+  });
+  allAcoes.sort((a,b)=>a.data.localeCompare(b.data));
+
+  // Agrupar por semana ou mês dependendo do intervalo
+  const deDt=de?new Date(de):new Date(allAcoes[0]?.data||ts);
+  const ateDt=new Date(ate);
+  const diffDias=Math.round((ateDt-deDt)/86400000);
+  const agruparPor=diffDias<=62?'semana':'mes';
+
+  const evolLabels=[];const evolData=[];
+  if(allAcoes.length>0){
+    const grupos={};
+    allAcoes.forEach(a=>{
+      let key;
+      if(agruparPor==='semana'){
+        const d=new Date(a.data);
+        const dom=new Date(d);dom.setDate(d.getDate()-d.getDay());
+        key=toStr(dom);
+      }else{
+        key=a.data.slice(0,7);
+      }
+      grupos[key]=(grupos[key]||0)+1;
+    });
+    Object.entries(grupos).sort(([a],[b])=>a.localeCompare(b)).forEach(([k,v])=>{
+      evolLabels.push(agruparPor==='semana'?'Sem '+fmtFull(k):MONTHS_PT[parseInt(k.split('-')[1])-1]+'/'+k.split('-')[0].slice(2));
+      evolData.push(v);
+    });
+  }
+
+  destroyChart('chart-evolucao');
+  new Chart(document.getElementById('chart-evolucao'),{
+    type:'line',
+    data:{labels:evolLabels,datasets:[{label:'Ações',data:evolData,borderColor:'#0D518E',backgroundColor:'rgba(13,81,142,0.08)',tension:0.4,fill:true,pointBackgroundColor:'#0D518E',pointRadius:4}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#F0F2F7'}},x:{grid:{display:false}}}}
+  });
+
+  // ── GRÁFICO 2: Campanhas por Categoria (donut) ──
+  destroyChart('chart-categoria');
+  new Chart(document.getElementById('chart-categoria'),{
+    type:'doughnut',
+    data:{labels:['Comercial','Conteúdo','Eventos'],datasets:[{data:[cc.COMERCIAL,cc.CONTEUDO,cc.EVENTOS],backgroundColor:['#1E88E5','#43A047','#FB8C00'],borderWidth:2,borderColor:'white'}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{font:{family:'Sora',size:11},padding:12}},tooltip:{callbacks:{label:ctx=>ctx.label+': '+ctx.raw+' campanha'+(ctx.raw!==1?'s':'')}}}}
+  });
+
+  // ── GRÁFICO 3: Campanhas por Status (barras verticais) ──
+  const stAtivaCount=all.filter(c=>c.status==='ativa'&&c.inicio<=ts&&c.fim>=ts).length;
+  const stBreve=all.filter(c=>c.status==='ativa'&&c.inicio>ts).length;
+  const stAdiada=all.filter(c=>c.status==='adiada').length;
+  const stCancelada=all.filter(c=>c.status==='cancelada').length;
+  const stEncerrada=all.filter(c=>c.status!=='cancelada'&&c.fim<ts).length;
+  destroyChart('chart-status');
+  new Chart(document.getElementById('chart-status'),{
+    type:'bar',
+    data:{labels:['Ativas','Em Breve','Adiadas','Canceladas','Encerradas'],datasets:[{data:[stAtivaCount,stBreve,stAdiada,stCancelada,stEncerrada],backgroundColor:['#00C07A','#0D518E','#FB8C00','#E53935','#9BA3B8'],borderRadius:6,borderSkipped:false}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#F0F2F7'}},x:{grid:{display:false}}}}
+  });
+
+  // ── GRÁFICO 4: Ações por Canal (barras horizontais) ──
+  const canalChartData=[
+    {nome:'WhatsApp', val:wa, cor:'#25D366'},
+    {nome:'E-mail',   val:em, cor:'#2196F3'},
+    {nome:'Instagram',val:ig, cor:'#E91E63'},
+    {nome:'Meta Ads', val:ma, cor:'#1877F2'},
+    {nome:'LinkedIn', val:li, cor:'#0A66C2'},
+    {nome:'Facebook', val:fb, cor:'#3b5998'},
+    {nome:'Google Ads',val:ga,cor:'#4285F4'},
+    {nome:'SMS',      val:sm, cor:'#FF9800'},
+    {nome:'Blog',     val:bl, cor:'#6B5CE7'},
+    {nome:'Outros',   val:ou, cor:'#9BA3B8'},
+  ].filter(c=>c.val>0).sort((a,b)=>b.val-a.val);
+  destroyChart('chart-canais');
+  new Chart(document.getElementById('chart-canais'),{
+    type:'bar',
+    data:{labels:canalChartData.map(c=>c.nome),datasets:[{data:canalChartData.map(c=>c.val),backgroundColor:canalChartData.map(c=>c.cor),borderRadius:6,borderSkipped:false}]},
+    options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#F0F2F7'}},y:{grid:{display:false},ticks:{font:{family:'Sora',size:11}}}}}
+  });
 }
 
 // ── CONSOLIDAÇÃO MENSAL ───────────────────────────────────────────
