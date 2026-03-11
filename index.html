@@ -789,6 +789,10 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
       <div class="canal-header"><span class="canal-title">SMS</span><button class="btn-add-canal" onclick="addCanalDate('inbound_sms')">+</button></div>
       <div class="canal-dates" id="canal-inbound_sms"></div>
     </div>
+    <div class="canal-block">
+      <div class="canal-header"><span class="canal-title">Landing Page</span><button class="btn-add-canal" onclick="addCanalDate('inbound_lp')">+</button></div>
+      <div class="canal-dates" id="canal-inbound_lp"></div>
+    </div>
     <hr class="divider">
     <h3 style="font-size:14px;font-weight:700;margin:16px 0 12px;color:var(--gray-800);">Rede Social</h3>
     <div class="canal-block">
@@ -810,6 +814,10 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <div class="canal-block">
       <div class="canal-header"><span class="canal-title">Outros</span><button class="btn-add-canal" onclick="addCanalDate('rede_social_outros')">+</button></div>
       <div class="canal-dates" id="canal-rede_social_outros"></div>
+    </div>
+    <div class="canal-block">
+      <div class="canal-header"><span class="canal-title">YouTube</span><button class="btn-add-canal" onclick="addCanalDate('rede_social_youtube')">+</button></div>
+      <div class="canal-dates" id="canal-rede_social_youtube"></div>
     </div>
     <hr class="divider">
     <!-- ═══ ESTRATÉGIA PERFORMANCE ═══ -->
@@ -1009,8 +1017,8 @@ function rowToLocal(r){
     briefing:r.briefing||'',
     defesa:r.defesa||'',
     tags:r.tags||'',
-    inbound:{wa:r.inbound_wa||[],sms:r.inbound_sms||[],email:r.inbound_email||[]},
-    rede_social:{instagram:r.rede_social_instagram||[],facebook:r.rede_social_facebook||[],linkedin:r.rede_social_linkedin||[],blog:r.rede_social_blog||[],outros:r.rede_social_outros||[]},
+    inbound:{wa:r.inbound_wa||[],sms:r.inbound_sms||[],email:r.inbound_email||[],lp:r.inbound_lp||[]},
+    rede_social:{instagram:r.rede_social_instagram||[],facebook:r.rede_social_facebook||[],linkedin:r.rede_social_linkedin||[],blog:r.rede_social_blog||[],outros:r.rede_social_outros||[],youtube:r.rede_social_youtube||[]},
     // Meta Ads unificado (compatível com dados antigos: mescla instagram_ads + facebook_ads)
     performance:{
       meta_ads:(()=>{
@@ -1098,8 +1106,8 @@ function getCats(c){return Array.isArray(c.categoria)?c.categoria:(c.categoria?[
 // Retorna badges de todas as categorias
 function catBadges(cats){return(Array.isArray(cats)?cats:[cats]).filter(Boolean).map(cat=>CAT_LABELS[cat]?'<span class="cat-badge cat-'+cat+'">'+CAT_LABELS[cat]+'</span>':'').join('');}
 const CANAIS={
-  inbound:{wa:'WhatsApp',sms:'SMS',email:'E-mail'},
-  rede_social:{instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',blog:'Blog',outros:'Outros'},
+  inbound:{wa:'WhatsApp',sms:'SMS',email:'E-mail',lp:'Landing Page'},
+  rede_social:{instagram:'Instagram',facebook:'Facebook',linkedin:'LinkedIn',blog:'Blog',outros:'Outros',youtube:'YouTube'},
   performance:{meta_ads:'Meta Ads',google_ads:'Google Ads'}
 };
 
@@ -1173,8 +1181,8 @@ async function dbInsert(data){
     name:data.name,color:data.color,
     categoria:Array.isArray(data.categoria)?[...data.categoria]:(data.categoria?[data.categoria]:[]),
     inicio:data.inicio,fim:data.fim,briefing:data.briefing||'',defesa:data.defesa||'',tags:data.tags||'',
-    inbound_wa:data.inbound_wa||[],inbound_email:data.inbound_email||[],inbound_sms:data.inbound_sms||[],
-    rede_social_instagram:data.rede_social_instagram||[],rede_social_facebook:data.rede_social_facebook||[],rede_social_linkedin:data.rede_social_linkedin||[],rede_social_blog:data.rede_social_blog||[],rede_social_outros:data.rede_social_outros||[],
+    inbound_wa:data.inbound_wa||[],inbound_email:data.inbound_email||[],inbound_sms:data.inbound_sms||[],inbound_lp:data.inbound_lp||[],
+    rede_social_instagram:data.rede_social_instagram||[],rede_social_facebook:data.rede_social_facebook||[],rede_social_linkedin:data.rede_social_linkedin||[],rede_social_blog:data.rede_social_blog||[],rede_social_outros:data.rede_social_outros||[],rede_social_youtube:data.rede_social_youtube||[],
     performance_meta_ads:data.performance_meta_ads||[],
     performance_meta_ads_inicio:data.performance_meta_ads_inicio||'',
     performance_meta_ads_fim:data.performance_meta_ads_fim||'',
@@ -1197,8 +1205,8 @@ async function dbUpdate(id,data){
     name:data.name,color:data.color,
     categoria:Array.isArray(data.categoria)?[...data.categoria]:(data.categoria?[data.categoria]:[]),
     inicio:data.inicio,fim:data.fim,briefing:data.briefing||'',defesa:data.defesa||'',tags:data.tags||'',
-    inbound_wa:data.inbound_wa||[],inbound_email:data.inbound_email||[],inbound_sms:data.inbound_sms||[],
-    rede_social_instagram:data.rede_social_instagram||[],rede_social_facebook:data.rede_social_facebook||[],rede_social_linkedin:data.rede_social_linkedin||[],rede_social_blog:data.rede_social_blog||[],rede_social_outros:data.rede_social_outros||[],
+    inbound_wa:data.inbound_wa||[],inbound_email:data.inbound_email||[],inbound_sms:data.inbound_sms||[],inbound_lp:data.inbound_lp||[],
+    rede_social_instagram:data.rede_social_instagram||[],rede_social_facebook:data.rede_social_facebook||[],rede_social_linkedin:data.rede_social_linkedin||[],rede_social_blog:data.rede_social_blog||[],rede_social_outros:data.rede_social_outros||[],rede_social_youtube:data.rede_social_youtube||[],
     performance_meta_ads:data.performance_meta_ads||[],
     performance_meta_ads_inicio:data.performance_meta_ads_inicio||'',
     performance_meta_ads_fim:data.performance_meta_ads_fim||'',
@@ -2289,7 +2297,7 @@ function getCanalCancelados(canal){
   return result;
 }
 function clearCanals(){
-  ['inbound_wa','inbound_email','inbound_sms','rede_social_instagram','rede_social_facebook','rede_social_linkedin','rede_social_blog','rede_social_outros','performance_meta_ads','performance_google_ads'].forEach(c=>document.getElementById('canal-'+c).innerHTML='');
+  ['inbound_wa','inbound_email','inbound_sms','inbound_lp','rede_social_instagram','rede_social_facebook','rede_social_linkedin','rede_social_blog','rede_social_outros','rede_social_youtube','performance_meta_ads','performance_google_ads'].forEach(c=>document.getElementById('canal-'+c).innerHTML='');
   // Clear performance date ranges
   // perf dates são limpos pelo clearCanals (canal-dates innerHTML)
 }
@@ -2326,11 +2334,13 @@ function openEditModal(id){
   (c.inbound.wa||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('inbound_wa',d,!!dc[d],dc[d]||'');});
   (c.inbound.email||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('inbound_email',d,!!dc[d],dc[d]||'');});
   (c.inbound.sms||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('inbound_sms',d,!!dc[d],dc[d]||'');});
+  (c.inbound.lp||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('inbound_lp',d,!!dc[d],dc[d]||'');});
   (c.rede_social.instagram||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_instagram',d,!!dc[d],dc[d]||'');});
   (c.rede_social.facebook||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_facebook',d,!!dc[d],dc[d]||'');});
   (c.rede_social.linkedin||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_linkedin',d,!!dc[d],dc[d]||'');});
   (c.rede_social.blog||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_blog',d,!!dc[d],dc[d]||'');});
   (c.rede_social.outros||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_outros',d,!!dc[d],dc[d]||'');});
+  (c.rede_social.youtube||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_youtube',d,!!dc[d],dc[d]||'');});
   // Carregar pares Meta Ads
   const metaDates = c.performance.meta_ads||[];
   if(Array.isArray(metaDates) && metaDates.length>0 && typeof metaDates[0]==='object'){
@@ -2381,11 +2391,13 @@ async function saveCampaign(){
     inbound_wa:getCanalDates('inbound_wa'),
     inbound_email:getCanalDates('inbound_email'),
     inbound_sms:getCanalDates('inbound_sms'),
+    inbound_lp:getCanalDates('inbound_lp'),
     rede_social_instagram:getCanalDates('rede_social_instagram'),
     rede_social_facebook:getCanalDates('rede_social_facebook'),
     rede_social_linkedin:getCanalDates('rede_social_linkedin'),
     rede_social_blog:getCanalDates('rede_social_blog'),
     rede_social_outros:getCanalDates('rede_social_outros'),
+    rede_social_youtube:getCanalDates('rede_social_youtube'),
     disparos_cancelados:{
       ...getCanalCancelados('inbound_wa'),
       ...getCanalCancelados('inbound_email'),
