@@ -2349,7 +2349,7 @@ function openEditModal(id){
     // legado: array de strings — criar um par com início=data[0]
     addPerfDate('performance_meta_ads', metaDates[0]||'', c.performance.meta_ads_fim||'');
   }
-  document.getElementById('perf-meta-fim').value=c.performance.meta_ads_fim||'';
+
   // Carregar pares Google Ads
   const googleDates = c.performance.google_ads||[];
   if(Array.isArray(googleDates) && googleDates.length>0 && typeof googleDates[0]==='object'){
@@ -2357,7 +2357,7 @@ function openEditModal(id){
   } else if(googleDates.length>0){
     addPerfDate('performance_google_ads', googleDates[0]||'', c.performance.google_ads_fim||'');
   }
-  document.getElementById('perf-google-fim').value=c.performance.google_ads_fim||'';
+
   // Status
   document.getElementById('status-section').style.display='block';
   selectedStatus=c.status||'ativa';
@@ -2441,8 +2441,8 @@ async function saveCampaign(){
       if(idx>=0){
         const updated={...campaigns[idx]};
         Object.assign(updated,{name:data.name,color:data.color,categoria:data.categoria,inicio:data.inicio,fim:data.fim,briefing:data.briefing,defesa:data.defesa,tags:data.tags});
-        updated.inbound={wa:data.inbound_wa,sms:data.inbound_sms,email:data.inbound_email};
-        updated.rede_social={instagram:data.rede_social_instagram,facebook:data.rede_social_facebook,linkedin:data.rede_social_linkedin,blog:data.rede_social_blog,outros:data.rede_social_outros};
+        updated.inbound={wa:data.inbound_wa,sms:data.inbound_sms,email:data.inbound_email,lp:data.inbound_lp};
+        updated.rede_social={instagram:data.rede_social_instagram,facebook:data.rede_social_facebook,linkedin:data.rede_social_linkedin,blog:data.rede_social_blog,outros:data.rede_social_outros,youtube:data.rede_social_youtube};
         updated.performance={meta_ads:data.performance_meta_ads,meta_ads_inicio:data.performance_meta_ads_inicio,meta_ads_fim:data.performance_meta_ads_fim,google_ads:data.performance_google_ads,google_ads_inicio:data.performance_google_ads_inicio,google_ads_fim:data.performance_google_ads_fim};
         updated.mes_ref=getMesRef(data.inicio);
         campaigns[idx]=updated;
