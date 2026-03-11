@@ -333,6 +333,8 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .detail-value{font-size:14px;color:var(--gray-800);line-height:1.6;}
 .detail-value.mono{font-family:'DM Mono',monospace;font-size:13px;}
 .canal-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.camp-tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;background:#F3F0FF;border:1.5px solid #C4B5FD;color:#6D28D9;font-size:11px;font-weight:700;letter-spacing:.03em;}
+.camp-tags-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
 .canal-tag{display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--gray-600);}
 .canal-tag .dot{width:7px;height:7px;border-radius:50%;}
 
@@ -891,7 +893,8 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <button class="modal-close" onclick="closeDetailModal()">✕</button>
     <div class="detail-color-bar" id="detail-color-bar"></div>
     <h2 id="detail-name" style="margin-bottom:6px"></h2>
-    <div id="detail-cat-badge" style="margin-bottom:16px;"></div>
+    <div id="detail-cat-badge" style="margin-bottom:8px;"></div>
+    <div class="camp-tags-row" id="detail-tags-row"></div>
     <div class="form-row2" style="margin-bottom:0">
       <div class="detail-section"><div class="detail-label">Vigência</div><div class="detail-value mono" id="detail-vig"></div></div>
       <div class="detail-section"><div class="detail-label">Status</div><div class="detail-value" id="detail-status"></div></div>
@@ -1041,6 +1044,12 @@ function rowToLocal(r){
     disparos_concluidos:r.disparos_concluidos||{},
     disparos_adiados:r.disparos_adiados||{}
   };
+}
+
+function renderTags(tagsStr){
+  if(!tagsStr||!tagsStr.trim()) return '';
+  return tagsStr.split(',').map(t=>t.trim()).filter(Boolean)
+    .map(t=>'<span class="camp-tag">'+t+'</span>').join('');
 }
 
 function getMesRef(inicio){
@@ -1554,7 +1563,8 @@ function renderResumo(){
     list.forEach((c,i)=>{
       const diff=Math.round((toDate(c.fim)-today)/86400000);const urg=diff>=0&&diff<=1;
       const card=document.createElement('div');card.className='resumo-card';card.style.animationDelay=(i*.07)+'s';
-      card.innerHTML=(urg?'<span class="badge-urgente">Acaba em '+diff+' dia'+(diff!==1?'s':'')+'</span>':'')+catBadge(c.categoria)+'<div class="resumo-card-name"><span class="dot" style="background:'+c.color+'"></span>'+c.name+'</div><div class="resumo-field"><label>Vigência</label><span>'+fmtFull(c.inicio)+' – '+fmtFull(c.fim)+'</span></div>'+(c.briefing?'<div class="resumo-field"><label>Briefing</label><div class="detail-rich" style="font-size:12px">'+c.briefing+'</div></div>':'')+'<div class="resumo-field"><label>Defesa</label><span>'+(c.defesa||'Sem defesa.')+'</span></div>';
+      const tagsHtml=renderTags(c.tags||'');
+      card.innerHTML=(urg?'<span class="badge-urgente">Acaba em '+diff+' dia'+(diff!==1?'s':'')+'</span>':'')+catBadge(c.categoria)+'<div class="resumo-card-name"><span class="dot" style="background:'+c.color+'"></span>'+c.name+'</div>'+(tagsHtml?'<div class="camp-tags-row" style="margin-bottom:10px">'+tagsHtml+'</div>':'')+'<div class="resumo-field"><label>Vigência</label><span>'+fmtFull(c.inicio)+' – '+fmtFull(c.fim)+'</span></div>'+(c.briefing?'<div class="resumo-field"><label>Briefing</label><div class="detail-rich" style="font-size:12px">'+c.briefing+'</div></div>':'')+'<div class="resumo-field"><label>Defesa</label><span>'+(c.defesa||'Sem defesa.')+'</span></div>';
       card.onclick=()=>openDetailModal(c.id);col.appendChild(card);
     });
   });
@@ -2402,6 +2412,8 @@ function openDetailModal(id){
   document.getElementById('detail-color-bar').style.background=c.color;
   document.getElementById('detail-name').textContent=c.name;
   document.getElementById('detail-cat-badge').innerHTML=catBadge(c.categoria);
+  const tagsRow=document.getElementById('detail-tags-row');
+  if(tagsRow) tagsRow.innerHTML=renderTags(c.tags||'');
   document.getElementById('detail-vig').textContent=fmtFull(c.inicio)+' – '+fmtFull(c.fim);
   const st=getStatus(c);
   document.getElementById('detail-status').innerHTML='<span style="color:'+st.color+';font-weight:600">'+st.label+'</span>';
