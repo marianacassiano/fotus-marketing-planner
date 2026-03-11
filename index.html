@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title> PLANNER MARKETING</title>
+<title>FOTUS: PLANNER MARKETING</title>
 <link rel="icon" href="https://energia.fotus.com.br/wp-content/uploads/2025/02/LOGO_Fotus-1A-e1739992227141.png" type="image/png">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -1924,7 +1924,7 @@ async function setDateState(campId, data, novoEstado, btnEl){
   // Atualizar visual da linha
   const dateRow=btnEl?.closest('.detail-date-row');
   if(dateRow){
-    dateRow.className='detail-date-row'+(jaEsta?'':novoEstado==='concluida?' st-concluida':novoEstado==='cancelada'?' st-cancelada':' st-adiada');
+    dateRow.className="detail-date-row"+(jaEsta?"":novoEstado==="concluida"?" st-concluida":novoEstado==="cancelada"?" st-cancelada":" st-adiada");
     const estadoSpan=dateRow.querySelector('.detail-date-estado');
     if(estadoSpan) estadoSpan.remove();
     if(!jaEsta){
@@ -2504,9 +2504,9 @@ function openDetailModal(id){
         '<span class="detail-date-label">'+fmtFull(d)+'</span>'+
         stLabel+
         '<div class="detail-state-btns">'+
-          '<button class="btn-state concluir'+(isConcluida?' ativo':'')+'" onclick="setDateState('+c.id+',''+d+'','concluida',this)">✅</button>'+
-          '<button class="btn-state adiar'+(isAdiada?' ativo':'')+'" onclick="setDateState('+c.id+',''+d+'','adiada',this)">⏳</button>'+
-          '<button class="btn-state cancelar'+(isCancelada?' ativo':'')+'" onclick="setDateState('+c.id+',''+d+'','cancelada',this)">❌</button>'+
+          '<button class="btn-state concluir'+(isConcluida?' ativo':'')+'" onclick="setDateState('+c.id+',&quot;'+d+'&quot;,&quot;concluida&quot;,this)">✅</button>'+
+          '<button class="btn-state adiar'+(isAdiada?' ativo':'')+'" onclick="setDateState('+c.id+',&quot;'+d+'&quot;,&quot;adiada&quot;,this)">⏳</button>'+
+          '<button class="btn-state cancelar'+(isCancelada?' ativo':'')+'" onclick="setDateState('+c.id+',&quot;'+d+'&quot;,&quot;cancelada&quot;,this)">❌</button>'+
         '</div>';
       // Linha de motivo (cancelar/adiar)
       const motivoRow=document.createElement('div');
@@ -2515,7 +2515,7 @@ function openDetailModal(id){
       const motivoColor=isCancelada?'#E53935':'#FFB300';
       motivoRow.innerHTML=
         '<input type="text" placeholder="Motivo (opcional)" value="'+motivoVal+'" style="border-color:'+motivoColor+'" id="motivo-'+c.id+'-'+d.replace(/-/g,'')+'">'+
-        '<button class="btn-motivo-save" onclick="saveMotivo('+c.id+',''+d+'')">Salvar</button>';
+        '<button class="btn-motivo-save" onclick="saveMotivo('+c.id+',&quot;'+d+'&quot;)">Salvar</button>';
       sec.appendChild(row);
       sec.appendChild(motivoRow);
     });
