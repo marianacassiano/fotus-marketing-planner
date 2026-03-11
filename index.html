@@ -155,9 +155,14 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .day-cell.empty{background:var(--gray-50);}
 .day-num{font-size:10px;font-weight:700;color:var(--gray-400);margin-bottom:4px;font-family:'DM Mono',monospace;}
 .day-date{font-size:9px;color:var(--gray-400);font-family:'DM Mono',monospace;margin-bottom:5px;}
-.dispatch-bar{font-size:9.5px;font-weight:600;border-radius:4px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:white;transition:opacity .15s;}
-.dispatch-bar.cancelada{background:white!important;color:var(--gray-600)!important;border:1.5px solid;text-decoration:line-through;opacity:0.75!important;}
-.dispatch-bar:hover{opacity:.8;}
+.dispatch-bar{font-size:9.5px;font-weight:600;border-radius:4px;padding:2px 5px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer;color:white;transition:opacity .15s;position:relative;}
+.dispatch-bar.cancelada{background:white!important;color:var(--gray-600)!important;border:2px solid #E53935!important;opacity:0.85!important;}
+.dispatch-bar.adiada{background:white!important;color:var(--gray-600)!important;border:2px solid #FFB300!important;opacity:0.85!important;}
+.dispatch-bar.concluida{background:white!important;color:var(--gray-600)!important;border:2px solid #00C07A!important;opacity:0.85!important;}
+.dispatch-bar:hover{opacity:.85;}
+.dispatch-bar:not(.cancelada):not(.adiada):not(.concluida):hover .bar-check-btn{display:flex;}
+.bar-check-btn{display:none;position:absolute;right:2px;top:50%;transform:translateY(-50%);background:rgba(0,192,122,0.15);border:none;border-radius:3px;cursor:pointer;font-size:9px;padding:1px 3px;line-height:1;align-items:center;z-index:10;}
+.bar-check-btn:hover{background:rgba(0,192,122,0.35);}
 
 /* GANTT */
 .gantt-card{background:white;border-radius:16px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);overflow-x:auto;}
@@ -983,7 +988,8 @@ function rowToLocal(r){
     motivo_adiamento:r.motivo_adiamento||'',
     data_adiamento:r.data_adiamento||'',
     disparos_deslocados:r.disparos_deslocados||{},
-    disparos_cancelados:r.disparos_cancelados||{}
+    disparos_cancelados:r.disparos_cancelados||{},
+    disparos_concluidos:r.disparos_concluidos||{}
   };
 }
 
@@ -1483,23 +1489,36 @@ function renderWeekRow(week,filtered,cont,today){
           const isAdiada=cp.status==='adiada';
           const isDisparoCancelado=!isCampCancelada&&cp.disparos_cancelados&&cp.disparos_cancelados[day.str];
           const motivoDisp=isDisparoCancelado?cp.disparos_cancelados[day.str]:'';
-          bar.className='dispatch-bar'+((isCampCancelada||isDisparoCancelado)?' cancelada':'');
+          const isDisparoConcluido=!isCampCancelada&&!isDisparoCancelado&&cp.disparos_concluidos&&cp.disparos_concluidos[day.str];
+
           if(isCampCancelada){
-            bar.style.borderColor=cp.color;
+            bar.className='dispatch-bar cancelada';
             bar.textContent='❌ '+cp.name+' · '+lbl;
             bar.title='Campanha cancelada · '+cp.name+' · '+lbl;
           }else if(isDisparoCancelado){
-            bar.style.borderColor=cp.color;
+            bar.className='dispatch-bar cancelada';
             bar.textContent='🚫 '+cp.name+' · '+lbl;
             bar.title='Ação cancelada'+(motivoDisp?' · '+motivoDisp:'')+' · '+cp.name+' · '+lbl;
           }else if(isAdiada){
-            bar.style.background='#FFB74D';
+            bar.className='dispatch-bar adiada';
             bar.textContent='⏳ '+cp.name+' · '+lbl;
             bar.title='Campanha adiada · '+cp.name+' · '+lbl;
+          }else if(isDisparoConcluido){
+            bar.className='dispatch-bar concluida';
+            bar.textContent='✅ '+cp.name+' · '+lbl;
+            bar.title='Ação concluída · '+cp.name+' · '+lbl;
           }else{
+            bar.className='dispatch-bar';
             bar.style.background=darken(cp.color,dk);
             bar.textContent=cp.name+' · '+lbl;
             bar.title=cp.name+' · '+lbl;
+            // Botão ✅ aparece no hover
+            const checkBtn=document.createElement('button');
+            checkBtn.className='bar-check-btn';
+            checkBtn.textContent='✅';
+            checkBtn.title='Marcar como concluída';
+            checkBtn.onclick=(e)=>{e.stopPropagation();toggleConcluido(cp.id,day.str);};
+            bar.appendChild(checkBtn);
           }
           bar.onclick=()=>openDetailModal(cp.id);cell.appendChild(bar);
         }
@@ -1834,6 +1853,24 @@ function renderDashboard(){
     data:{labels:canalChartData.map(c=>c.nome),datasets:[{data:canalChartData.map(c=>c.val),backgroundColor:canalChartData.map(c=>c.cor),borderRadius:6,borderSkipped:false}]},
     options:{indexAxis:'y',responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},scales:{x:{beginAtZero:true,ticks:{stepSize:1},grid:{color:'#F0F2F7'}},y:{grid:{display:false},ticks:{font:{family:'Sora',size:11}}}}}
   });
+}
+
+// ── TOGGLE CONCLUÍDO ─────────────────────────────────────────────
+async function toggleConcluido(campId, data){
+  const cp = campaigns.find(c=>c.id===campId);
+  if(!cp) return;
+  if(!cp.disparos_concluidos) cp.disparos_concluidos = {};
+  if(cp.disparos_concluidos[data]){
+    delete cp.disparos_concluidos[data];
+  } else {
+    cp.disparos_concluidos[data] = true;
+  }
+  try{
+    await sbFetch('campaigns?id=eq.'+campId,'PATCH',{disparos_concluidos: cp.disparos_concluidos});
+    renderDispatch();
+  }catch(e){
+    showToast('Erro ao salvar: '+e.message,'error');
+  }
 }
 
 // ── CONSOLIDAÇÃO MENSAL ───────────────────────────────────────────
