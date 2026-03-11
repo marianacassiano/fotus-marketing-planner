@@ -336,6 +336,8 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .detail-value{font-size:14px;color:var(--gray-800);line-height:1.6;}
 .detail-value.mono{font-family:'DM Mono',monospace;font-size:13px;}
 .canal-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px;}
+.perf-date-pair{display:grid;grid-template-columns:1fr 1fr auto auto;gap:8px;align-items:center;margin-bottom:8px;width:100%;}
+.perf-date-pair label{font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--gray-400);display:block;margin-bottom:2px;}
 .camp-tag{display:inline-flex;align-items:center;padding:3px 10px;border-radius:20px;background:#F3F0FF;border:1.5px solid #C4B5FD;color:#6D28D9;font-size:11px;font-weight:700;letter-spacing:.03em;}
 .camp-tags-row{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px;}
 .canal-tag{display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--gray-600);}
@@ -817,18 +819,7 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <div class="canal-block">
       <div class="canal-header">
         <span class="canal-title">Meta Ads</span>
-        <button class="btn-add-canal" onclick="addCanalDate('performance_meta_ads')">+</button>
-      </div>
-      <!-- Período de veiculação Meta Ads -->
-      <div class="perf-date-range">
-        <div>
-          <label>Data Início</label>
-          <input class="form-input" type="date" id="perf-meta-inicio">
-        </div>
-        <div>
-          <label>Data Fim</label>
-          <input class="form-input" type="date" id="perf-meta-fim">
-        </div>
+        <button class="btn-add-canal" onclick="addPerfDate('performance_meta_ads')">+</button>
       </div>
       <div class="canal-dates" id="canal-performance_meta_ads"></div>
     </div>
@@ -837,18 +828,7 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     <div class="canal-block">
       <div class="canal-header">
         <span class="canal-title">Google Ads</span>
-        <button class="btn-add-canal" onclick="addCanalDate('performance_google_ads')">+</button>
-      </div>
-      <!-- Período de veiculação Google Ads -->
-      <div class="perf-date-range">
-        <div>
-          <label>Data Início</label>
-          <input class="form-input" type="date" id="perf-google-inicio">
-        </div>
-        <div>
-          <label>Data Fim</label>
-          <input class="form-input" type="date" id="perf-google-fim">
-        </div>
+        <button class="btn-add-canal" onclick="addPerfDate('performance_google_ads')">+</button>
       </div>
       <div class="canal-dates" id="canal-performance_google_ads"></div>
     </div>
@@ -1033,10 +1013,19 @@ function rowToLocal(r){
     rede_social:{instagram:r.rede_social_instagram||[],facebook:r.rede_social_facebook||[],linkedin:r.rede_social_linkedin||[],blog:r.rede_social_blog||[],outros:r.rede_social_outros||[]},
     // Meta Ads unificado (compatível com dados antigos: mescla instagram_ads + facebook_ads)
     performance:{
-      meta_ads:r.performance_meta_ads||[...(r.performance_instagram_ads||[]),...(r.performance_facebook_ads||[])],
+      meta_ads:(()=>{
+        const d=r.performance_meta_ads||[...(r.performance_instagram_ads||[]),...(r.performance_facebook_ads||[])];
+        // Se legado (array de strings), converter para [{inicio,fim}]
+        if(d.length>0&&typeof d[0]==='string') return [{inicio:d[0]||'',fim:r.performance_meta_ads_fim||''}];
+        return d;
+      })(),
       meta_ads_inicio:r.performance_meta_ads_inicio||'',
       meta_ads_fim:r.performance_meta_ads_fim||'',
-      google_ads:r.performance_google_ads||[],
+      google_ads:(()=>{
+        const d=r.performance_google_ads||[];
+        if(d.length>0&&typeof d[0]==='string') return [{inicio:d[0]||'',fim:r.performance_google_ads_fim||''}];
+        return d;
+      })(),
       google_ads_inicio:r.performance_google_ads_inicio||'',
       google_ads_fim:r.performance_google_ads_fim||''
     },
@@ -2203,6 +2192,37 @@ function selectCat(cat){
 }
 
 // ── CANAL DATES ───────────────────────────────────────────────────
+function addPerfDate(canal, inicio='', fim=''){
+  const c = document.getElementById('canal-'+canal);
+  const wrapper = document.createElement('div'); wrapper.className='perf-pair-wrapper'; wrapper.style.width='100%';
+
+  const pair = document.createElement('div'); pair.className='perf-date-pair';
+
+  // Início
+  const colIn = document.createElement('div');
+  colIn.innerHTML='<label>Data Início</label>';
+  const inpIn = document.createElement('input');
+  inpIn.className='form-input inp-perf-inicio'; inpIn.type='date'; inpIn.value=inicio;
+  colIn.appendChild(inpIn);
+
+  // Fim
+  const colFim = document.createElement('div');
+  colFim.innerHTML='<label>Data Fim</label>';
+  const inpFim = document.createElement('input');
+  inpFim.className='form-input inp-perf-fim'; inpFim.type='date'; inpFim.value=fim;
+  colFim.appendChild(inpFim);
+
+  // Botão remover
+  const btnRemove = document.createElement('button');
+  btnRemove.className='btn-remove-date'; btnRemove.type='button'; btnRemove.textContent='✕';
+  btnRemove.style.alignSelf='flex-end'; btnRemove.style.marginBottom='2px';
+  btnRemove.onclick=()=>wrapper.remove();
+
+  pair.appendChild(colIn); pair.appendChild(colFim); pair.appendChild(btnRemove);
+  wrapper.appendChild(pair);
+  c.appendChild(wrapper);
+}
+
 function addCanalDate(canal, value='', cancelado=false, motivoCancelamento=''){
   const c = document.getElementById('canal-'+canal);
   const wrapper = document.createElement('div'); wrapper.style.width='100%';
@@ -2240,6 +2260,15 @@ function addCanalDate(canal, value='', cancelado=false, motivoCancelamento=''){
   wrapper.appendChild(row); wrapper.appendChild(justRow);
   c.appendChild(wrapper);
 }
+function getPerfDates(canal){
+  return [...document.getElementById('canal-'+canal).querySelectorAll('.perf-pair-wrapper')].map(w=>{
+    const ini=w.querySelector('.inp-perf-inicio');
+    const fim=w.querySelector('.inp-perf-fim');
+    if(ini&&fim&&(ini.value||fim.value)) return {inicio:ini.value||'',fim:fim.value||''};
+    return null;
+  }).filter(Boolean);
+}
+
 function getCanalDates(canal){
   return [...document.getElementById('canal-'+canal).querySelectorAll('.canal-date-row')].map(row=>{
     const inp=row.querySelector('.inp-data');
@@ -2262,7 +2291,7 @@ function getCanalCancelados(canal){
 function clearCanals(){
   ['inbound_wa','inbound_email','inbound_sms','rede_social_instagram','rede_social_facebook','rede_social_linkedin','rede_social_blog','rede_social_outros','performance_meta_ads','performance_google_ads'].forEach(c=>document.getElementById('canal-'+c).innerHTML='');
   // Clear performance date ranges
-  ['perf-meta-inicio','perf-meta-fim','perf-google-inicio','perf-google-fim'].forEach(id=>document.getElementById(id).value='');
+  // perf dates são limpos pelo clearCanals (canal-dates innerHTML)
 }
 
 // ── FORM MODAL ────────────────────────────────────────────────────
@@ -2302,11 +2331,22 @@ function openEditModal(id){
   (c.rede_social.linkedin||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_linkedin',d,!!dc[d],dc[d]||'');});
   (c.rede_social.blog||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_blog',d,!!dc[d],dc[d]||'');});
   (c.rede_social.outros||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('rede_social_outros',d,!!dc[d],dc[d]||'');});
-  (c.performance.meta_ads||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('performance_meta_ads',d,!!dc[d],dc[d]||'');});
-  document.getElementById('perf-meta-inicio').value=c.performance.meta_ads_inicio||'';
+  // Carregar pares Meta Ads
+  const metaDates = c.performance.meta_ads||[];
+  if(Array.isArray(metaDates) && metaDates.length>0 && typeof metaDates[0]==='object'){
+    metaDates.forEach(p=>addPerfDate('performance_meta_ads', p.inicio||'', p.fim||''));
+  } else if(metaDates.length>0){
+    // legado: array de strings — criar um par com início=data[0]
+    addPerfDate('performance_meta_ads', metaDates[0]||'', c.performance.meta_ads_fim||'');
+  }
   document.getElementById('perf-meta-fim').value=c.performance.meta_ads_fim||'';
-  (c.performance.google_ads||[]).forEach(d=>{const dc=c.disparos_cancelados||{};addCanalDate('performance_google_ads',d,!!dc[d],dc[d]||'');});
-  document.getElementById('perf-google-inicio').value=c.performance.google_ads_inicio||'';
+  // Carregar pares Google Ads
+  const googleDates = c.performance.google_ads||[];
+  if(Array.isArray(googleDates) && googleDates.length>0 && typeof googleDates[0]==='object'){
+    googleDates.forEach(p=>addPerfDate('performance_google_ads', p.inicio||'', p.fim||''));
+  } else if(googleDates.length>0){
+    addPerfDate('performance_google_ads', googleDates[0]||'', c.performance.google_ads_fim||'');
+  }
   document.getElementById('perf-google-fim').value=c.performance.google_ads_fim||'';
   // Status
   document.getElementById('status-section').style.display='block';
@@ -2361,12 +2401,12 @@ async function saveCampaign(){
     motivo_adiamento:selectedStatus==='adiada'?document.getElementById('f-motivo-adiamento').value:'',
     data_adiamento:selectedStatus==='adiada'?document.getElementById('f-data-adiamento').value:'',
     disparos_deslocados:{},
-    performance_meta_ads:getCanalDates('performance_meta_ads'),
-    performance_meta_ads_inicio:document.getElementById('perf-meta-inicio').value,
-    performance_meta_ads_fim:document.getElementById('perf-meta-fim').value,
-    performance_google_ads:getCanalDates('performance_google_ads'),
-    performance_google_ads_inicio:document.getElementById('perf-google-inicio').value,
-    performance_google_ads_fim:document.getElementById('perf-google-fim').value
+    performance_meta_ads:getPerfDates('performance_meta_ads'),
+    performance_meta_ads_inicio:'',
+    performance_meta_ads_fim:'',
+    performance_google_ads:getPerfDates('performance_google_ads'),
+    performance_google_ads_inicio:'',
+    performance_google_ads_fim:''
   };
   // Deslocamento de disparos
   const novaDataDisparos=document.getElementById('f-deslocar-disparos')?.value;
