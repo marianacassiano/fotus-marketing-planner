@@ -329,6 +329,30 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .canal-tag{display:inline-flex;align-items:center;gap:6px;background:var(--gray-100);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;color:var(--gray-600);}
 .canal-tag .dot{width:7px;height:7px;border-radius:50%;}
 
+/* DETALHE MODAL — AÇÕES POR DATA */
+.detail-canal-section{margin-bottom:14px;}
+.detail-canal-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);margin-bottom:6px;display:flex;align-items:center;gap:6px;}
+.detail-canal-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0;}
+.detail-date-row{display:flex;align-items:center;gap:6px;padding:5px 8px;border-radius:8px;background:var(--gray-50);margin-bottom:4px;}
+.detail-date-row.st-concluida{background:#F0FBF6;border:1.5px solid #00C07A;}
+.detail-date-row.st-cancelada{background:#FFF5F5;border:1.5px solid #E53935;}
+.detail-date-row.st-adiada{background:#FFFBF0;border:1.5px solid #FFB300;}
+.detail-date-label{font-size:12px;font-weight:600;color:var(--gray-700);flex:1;font-family:'DM Mono',monospace;}
+.detail-date-estado{font-size:10px;font-weight:700;margin-right:4px;}
+.detail-state-btns{display:flex;gap:4px;flex-shrink:0;}
+.btn-state{padding:3px 7px;border-radius:6px;border:1.5px solid transparent;font-size:10px;font-weight:700;cursor:pointer;background:white;transition:all .15s;line-height:1.4;}
+.btn-state.concluir{border-color:#00C07A;color:#00C07A;}
+.btn-state.concluir:hover,.btn-state.concluir.ativo{background:#00C07A;color:white;}
+.btn-state.adiar{border-color:#FFB300;color:#FFB300;}
+.btn-state.adiar:hover,.btn-state.adiar.ativo{background:#FFB300;color:white;}
+.btn-state.cancelar{border-color:#E53935;color:#E53935;}
+.btn-state.cancelar:hover,.btn-state.cancelar.ativo{background:#E53935;color:white;}
+.detail-motivo-row{display:none;margin-top:4px;margin-bottom:4px;}
+.detail-motivo-row.visible{display:flex;align-items:center;gap:6px;}
+.detail-motivo-row input{flex:1;padding:5px 10px;border-radius:6px;border:1.5px solid var(--gray-200);font-family:'Sora',sans-serif;font-size:11px;outline:none;}
+.detail-motivo-row input:focus{border-color:var(--purple-light);}
+.btn-motivo-save{padding:4px 10px;border-radius:6px;background:var(--purple);color:white;border:none;font-size:11px;font-weight:700;cursor:pointer;}
+
 /* DASHBOARD FILTRO PERÍODO */
 .dash-periodo{background:white;border-radius:14px;padding:16px 20px;box-shadow:0 1px 6px rgba(0,0,0,.06);margin-bottom:20px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;}
 .dash-periodo label{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--gray-400);white-space:nowrap;}
@@ -989,7 +1013,8 @@ function rowToLocal(r){
     data_adiamento:r.data_adiamento||'',
     disparos_deslocados:r.disparos_deslocados||{},
     disparos_cancelados:r.disparos_cancelados||{},
-    disparos_concluidos:r.disparos_concluidos||{}
+    disparos_concluidos:r.disparos_concluidos||{},
+    disparos_adiados:r.disparos_adiados||{}
   };
 }
 
@@ -1490,6 +1515,7 @@ function renderWeekRow(week,filtered,cont,today){
           const isDisparoCancelado=!isCampCancelada&&cp.disparos_cancelados&&cp.disparos_cancelados[day.str];
           const motivoDisp=isDisparoCancelado?cp.disparos_cancelados[day.str]:'';
           const isDisparoConcluido=!isCampCancelada&&!isDisparoCancelado&&cp.disparos_concluidos&&cp.disparos_concluidos[day.str];
+          const isDisparoAdiado=!isCampCancelada&&!isDisparoCancelado&&!isDisparoConcluido&&cp.disparos_adiados&&cp.disparos_adiados[day.str]!==undefined&&cp.disparos_adiados[day.str]!==null&&cp.disparos_adiados&&Object.prototype.hasOwnProperty.call(cp.disparos_adiados,day.str);
 
           if(isCampCancelada){
             bar.className='dispatch-bar cancelada';
@@ -1497,8 +1523,13 @@ function renderWeekRow(week,filtered,cont,today){
             bar.title='Campanha cancelada · '+cp.name+' · '+lbl;
           }else if(isDisparoCancelado){
             bar.className='dispatch-bar cancelada';
-            bar.textContent='🚫 '+cp.name+' · '+lbl;
+            bar.textContent='❌ '+cp.name+' · '+lbl;
             bar.title='Ação cancelada'+(motivoDisp?' · '+motivoDisp:'')+' · '+cp.name+' · '+lbl;
+          }else if(isDisparoAdiado){
+            bar.className='dispatch-bar adiada';
+            const motivoAdio=cp.disparos_adiados[day.str]||'';
+            bar.textContent='⏳ '+cp.name+' · '+lbl;
+            bar.title='Ação adiada'+(motivoAdio?' · '+motivoAdio:'')+' · '+cp.name+' · '+lbl;
           }else if(isAdiada){
             bar.className='dispatch-bar adiada';
             bar.textContent='⏳ '+cp.name+' · '+lbl;
@@ -1512,7 +1543,6 @@ function renderWeekRow(week,filtered,cont,today){
             bar.style.background=darken(cp.color,dk);
             bar.textContent=cp.name+' · '+lbl;
             bar.title=cp.name+' · '+lbl;
-            // Botão ✅ aparece no hover
             const checkBtn=document.createElement('button');
             checkBtn.className='bar-check-btn';
             checkBtn.textContent='✅';
@@ -1855,7 +1885,88 @@ function renderDashboard(){
   });
 }
 
-// ── TOGGLE CONCLUÍDO ─────────────────────────────────────────────
+// ── ESTADO DE DATAS (concluida / adiada / cancelada) ─────────────
+async function setDateState(campId, data, novoEstado, btnEl){
+  const cp=campaigns.find(c=>c.id===campId);if(!cp)return;
+  if(!cp.disparos_concluidos)cp.disparos_concluidos={};
+  if(!cp.disparos_cancelados)cp.disparos_cancelados={};
+  if(!cp.disparos_adiados)cp.disparos_adiados={};
+
+  // Toggle: se já está nesse estado, remove
+  const jaEsta=(
+    (novoEstado==='concluida'&&cp.disparos_concluidos[data])||
+    (novoEstado==='cancelada'&&cp.disparos_cancelados[data])||
+    (novoEstado==='adiada'&&cp.disparos_adiados[data])
+  );
+
+  // Limpar todos os estados dessa data
+  delete cp.disparos_concluidos[data];
+  delete cp.disparos_cancelados[data];
+  delete cp.disparos_adiados[data];
+
+  // Linha de motivo
+  const motivoInput=document.getElementById('motivo-'+campId+'-'+data.replace(/-/g,''));
+  const motivoRow=motivoInput?.closest('.detail-motivo-row');
+
+  if(!jaEsta){
+    if(novoEstado==='concluida') cp.disparos_concluidos[data]=true;
+    if(novoEstado==='cancelada') cp.disparos_cancelados[data]='';
+    if(novoEstado==='adiada')    cp.disparos_adiados[data]='';
+    if(motivoRow){
+      motivoRow.classList.toggle('visible', novoEstado!=='concluida');
+      const color=novoEstado==='cancelada'?'#E53935':'#FFB300';
+      motivoRow.querySelector('input').style.borderColor=color;
+    }
+  } else {
+    if(motivoRow) motivoRow.classList.remove('visible');
+  }
+
+  // Atualizar visual da linha
+  const dateRow=btnEl?.closest('.detail-date-row');
+  if(dateRow){
+    dateRow.className='detail-date-row'+(jaEsta?'':novoEstado==='concluida?' st-concluida':novoEstado==='cancelada'?' st-cancelada':' st-adiada');
+    const estadoSpan=dateRow.querySelector('.detail-date-estado');
+    if(estadoSpan) estadoSpan.remove();
+    if(!jaEsta){
+      const lbl=document.createElement('span');
+      lbl.className='detail-date-estado';
+      lbl.style.color=novoEstado==='concluida'?'#00C07A':novoEstado==='cancelada'?'#E53935':'#FFB300';
+      lbl.textContent=novoEstado==='concluida'?'✅ Concluída':novoEstado==='cancelada'?'❌ Cancelada':'⏳ Adiada';
+      dateRow.querySelector('.detail-date-label').after(lbl);
+    }
+    // Atualizar botões ativos
+    dateRow.querySelectorAll('.btn-state').forEach(b=>b.classList.remove('ativo'));
+    if(!jaEsta) btnEl.classList.add('ativo');
+  }
+
+  try{
+    await sbFetch('campaigns?id=eq.'+campId,'PATCH',{
+      disparos_concluidos:cp.disparos_concluidos,
+      disparos_cancelados:cp.disparos_cancelados,
+      disparos_adiados:cp.disparos_adiados
+    });
+    renderDispatch();
+  }catch(e){showToast('Erro ao salvar: '+e.message,'error');}
+}
+
+async function saveMotivo(campId, data){
+  const cp=campaigns.find(c=>c.id===campId);if(!cp)return;
+  const motivoInput=document.getElementById('motivo-'+campId+'-'+data.replace(/-/g,''));
+  if(!motivoInput)return;
+  const motivo=motivoInput.value.trim();
+  if(cp.disparos_cancelados&&cp.disparos_cancelados[data]!==undefined) cp.disparos_cancelados[data]=motivo;
+  if(cp.disparos_adiados&&cp.disparos_adiados[data]!==undefined)       cp.disparos_adiados[data]=motivo;
+  try{
+    await sbFetch('campaigns?id=eq.'+campId,'PATCH',{
+      disparos_cancelados:cp.disparos_cancelados,
+      disparos_adiados:cp.disparos_adiados
+    });
+    showToast('Motivo salvo!');
+    renderDispatch();
+  }catch(e){showToast('Erro ao salvar motivo: '+e.message,'error');}
+}
+
+// ── TOGGLE CONCLUÍDO (calendário — hover) ─────────────────────────
 async function toggleConcluido(campId, data){
   const cp = campaigns.find(c=>c.id===campId);
   if(!cp) return;
@@ -2373,11 +2484,45 @@ function openDetailModal(id){
   let perfPeriods='';
   if(c.performance.meta_ads_inicio&&c.performance.meta_ads_fim){perfPeriods+='<div style="font-size:11px;color:var(--gray-600);margin-top:6px;">Meta Ads: '+fmtFull(c.performance.meta_ads_inicio)+' – '+fmtFull(c.performance.meta_ads_fim)+'</div>';}
   if(c.performance.google_ads_inicio&&c.performance.google_ads_fim){perfPeriods+='<div style="font-size:11px;color:var(--gray-600);margin-top:4px;">Google Ads: '+fmtFull(c.performance.google_ads_inicio)+' – '+fmtFull(c.performance.google_ads_fim)+'</div>';}
+  let hasAny=false;
   canalData.forEach(([dates,lbl,col])=>{
-    (dates||[]).forEach(d=>{const t=document.createElement('span');t.className='canal-tag';t.innerHTML='<span class="dot" style="background:'+col+'"></span>'+lbl+': '+fmtFull(d);canais.appendChild(t);});
+    if(!(dates&&dates.length))return;
+    hasAny=true;
+    const sec=document.createElement('div');sec.className='detail-canal-section';
+    sec.innerHTML='<div class="detail-canal-title"><div class="detail-canal-dot" style="background:'+col+'"></div>'+lbl+'</div>';
+    dates.forEach(d=>{
+      const isConcluida=!!(c.disparos_concluidos&&c.disparos_concluidos[d]);
+      const isCancelada=!!(c.disparos_cancelados&&c.disparos_cancelados[d]);
+      const isAdiada=!!(c.disparos_adiados&&c.disparos_adiados[d]);
+      const stClass=isConcluida?'st-concluida':isCancelada?'st-cancelada':isAdiada?'st-adiada':'';
+      const stLabel=isConcluida?'<span class="detail-date-estado" style="color:#00C07A">✅ Concluída</span>':
+                    isCancelada?'<span class="detail-date-estado" style="color:#E53935">❌ Cancelada</span>':
+                    isAdiada?'<span class="detail-date-estado" style="color:#FFB300">⏳ Adiada</span>':'';
+      const row=document.createElement('div');
+      row.className='detail-date-row '+stClass;
+      row.innerHTML=
+        '<span class="detail-date-label">'+fmtFull(d)+'</span>'+
+        stLabel+
+        '<div class="detail-state-btns">'+
+          '<button class="btn-state concluir'+(isConcluida?' ativo':'')+'" onclick="setDateState('+c.id+',''+d+'','concluida',this)">✅</button>'+
+          '<button class="btn-state adiar'+(isAdiada?' ativo':'')+'" onclick="setDateState('+c.id+',''+d+'','adiada',this)">⏳</button>'+
+          '<button class="btn-state cancelar'+(isCancelada?' ativo':'')+'" onclick="setDateState('+c.id+',''+d+'','cancelada',this)">❌</button>'+
+        '</div>';
+      // Linha de motivo (cancelar/adiar)
+      const motivoRow=document.createElement('div');
+      motivoRow.className='detail-motivo-row'+(isCancelada||isAdiada?' visible':'');
+      const motivoVal=isCancelada?(c.disparos_cancelados[d]||''):isAdiada?(c.disparos_adiados[d]||''):'';
+      const motivoColor=isCancelada?'#E53935':'#FFB300';
+      motivoRow.innerHTML=
+        '<input type="text" placeholder="Motivo (opcional)" value="'+motivoVal+'" style="border-color:'+motivoColor+'" id="motivo-'+c.id+'-'+d.replace(/-/g,'')+'">'+
+        '<button class="btn-motivo-save" onclick="saveMotivo('+c.id+',''+d+'')">Salvar</button>';
+      sec.appendChild(row);
+      sec.appendChild(motivoRow);
+    });
+    canais.appendChild(sec);
   });
   if(perfPeriods){const pd=document.createElement('div');pd.innerHTML=perfPeriods;canais.appendChild(pd);}
-  if(!canais.innerHTML)canais.innerHTML='<span style="color:var(--gray-400);font-size:13px;">Nenhum canal configurado.</span>';
+  if(!hasAny)canais.innerHTML='<span style="color:var(--gray-400);font-size:13px;">Nenhum canal configurado.</span>';
   document.getElementById('btn-edit-from-detail').style.display=(currentUser&&currentUser.role==='user')?'none':'';
   document.getElementById('modal-detail').classList.add('open');
 }
