@@ -220,6 +220,9 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .resumo-field{margin-bottom:7px;}
 .resumo-field label{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--gray-400);display:block;margin-bottom:2px;}
 .resumo-field span{font-size:12px;font-family:'DM Mono',monospace;color:var(--gray-600);}
+.resumo-defesa{font-size:12px;color:var(--gray-600);line-height:1.6;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden;}
+.btn-saiba-mais{display:inline-flex;align-items:center;gap:5px;margin-top:10px;padding:6px 14px;border-radius:8px;border:1.5px solid var(--purple-light);background:var(--purple-pale);color:var(--purple);font-family:'Sora',sans-serif;font-size:11px;font-weight:700;cursor:pointer;transition:all .15s;}
+.btn-saiba-mais:hover{background:var(--purple);color:white;}
 .badge-urgente{position:absolute;top:12px;right:12px;background:var(--red);color:white;font-size:9px;font-weight:700;letter-spacing:.06em;padding:3px 8px;border-radius:6px;text-transform:uppercase;}
 .empty-col{color:var(--gray-400);font-size:13px;font-style:italic;padding:10px 0;}
 
@@ -901,7 +904,9 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
     </div>
     <div class="detail-section"><div class="detail-label">Briefing / Objetivo</div><div class="detail-value" id="detail-briefing"></div></div>
     <div class="detail-section"><div class="detail-label">Defesa / Regras</div><div class="detail-value" id="detail-defesa"></div></div>
-    <div class="detail-section"><div class="detail-label">Ações Programadas</div><div class="canal-tags" id="detail-canais"></div></div>
+    <div id="detail-acoes-section">
+      <div class="detail-section"><div class="detail-label">Ações Programadas</div><div class="canal-tags" id="detail-canais"></div></div>
+    </div>
     <hr class="divider">
     <div class="modal-actions">
       <button class="btn-cancel" onclick="closeDetailModal()">Fechar</button>
@@ -1564,7 +1569,16 @@ function renderResumo(){
       const diff=Math.round((toDate(c.fim)-today)/86400000);const urg=diff>=0&&diff<=1;
       const card=document.createElement('div');card.className='resumo-card';card.style.animationDelay=(i*.07)+'s';
       const tagsHtml=renderTags(c.tags||'');
-      card.innerHTML=(urg?'<span class="badge-urgente">Acaba em '+diff+' dia'+(diff!==1?'s':'')+'</span>':'')+catBadge(c.categoria)+'<div class="resumo-card-name"><span class="dot" style="background:'+c.color+'"></span>'+c.name+'</div>'+(tagsHtml?'<div class="camp-tags-row" style="margin-bottom:10px">'+tagsHtml+'</div>':'')+'<div class="resumo-field"><label>Vigência</label><span>'+fmtFull(c.inicio)+' – '+fmtFull(c.fim)+'</span></div>'+(c.briefing?'<div class="resumo-field"><label>Briefing</label><div class="detail-rich" style="font-size:12px">'+c.briefing+'</div></div>':'')+'<div class="resumo-field"><label>Defesa</label><span>'+(c.defesa||'Sem defesa.')+'</span></div>';
+      // Defesa como texto puro para truncar no card (sem HTML)
+      const defesaTexto=(c.defesa||'').replace(/<[^>]+>/g,' ').replace(/\s+/g,' ').trim();
+      card.innerHTML=
+        (urg?'<span class="badge-urgente">Acaba em '+diff+' dia'+(diff!==1?'s':'')+'</span>':'')+
+        catBadge(c.categoria)+
+        '<div class="resumo-card-name"><span class="dot" style="background:'+c.color+'"></span>'+c.name+'</div>'+
+        (tagsHtml?'<div class="camp-tags-row" style="margin-bottom:10px">'+tagsHtml+'</div>':'')+
+        '<div class="resumo-field"><label>Vigência</label><span>'+fmtFull(c.inicio)+' – '+fmtFull(c.fim)+'</span></div>'+
+        (defesaTexto?'<div class="resumo-field"><label>Defesa</label><div class="resumo-defesa">'+defesaTexto+'</div></div>':'')+
+        '<button class="btn-saiba-mais" onclick="event.stopPropagation();openDetailModal('+c.id+')">Saiba mais →</button>'
       card.onclick=()=>openDetailModal(c.id);col.appendChild(card);
     });
   });
@@ -2479,7 +2493,12 @@ function openDetailModal(id){
   });
   if(perfPeriods){const pd=document.createElement('div');pd.innerHTML=perfPeriods;canais.appendChild(pd);}
   if(!hasAny)canais.innerHTML='<span style="color:var(--gray-400);font-size:13px;">Nenhum canal configurado.</span>';
-  document.getElementById('btn-edit-from-detail').style.display=(currentUser&&currentUser.role==='user')?'none':'';
+  const isUserRole = currentUser && currentUser.role === 'user';
+  // Botão editar — só admin
+  document.getElementById('btn-edit-from-detail').style.display = isUserRole ? 'none' : '';
+  // Seção de ações programadas — só admin
+  const detailAcoesSection = document.getElementById('detail-acoes-section');
+  if(detailAcoesSection) detailAcoesSection.style.display = isUserRole ? 'none' : '';
   document.getElementById('modal-detail').classList.add('open');
 }
 function closeDetailModal(){document.getElementById('modal-detail').classList.remove('open');}
