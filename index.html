@@ -1023,7 +1023,7 @@ function rowToLocal(r){
     id:r.id,
     name:r.name,
     color:r.color,
-    categoria:r.categoria,
+    categoria:Array.isArray(r.categoria)?r.categoria:(r.categoria?[r.categoria]:[]),
     inicio:r.inicio,
     fim:r.fim,
     briefing:r.briefing||'',
@@ -2332,7 +2332,7 @@ async function saveCampaign(){
   if(!name||!inicio||!fim){showToast('Preencha nome e datas','error');return;}
   if(inicio>fim){showToast('Data início deve ser anterior ao fim','error');return;}
   const data={
-    name:toUpper(name),color:selectedColor,categoria:selectedCat.length===1?selectedCat[0]:selectedCat,status:selectedStatus,inicio,fim,
+    name:toUpper(name),color:selectedColor,categoria:[...selectedCat],status:selectedStatus,inicio,fim,
     briefing:document.getElementById('f-briefing').innerHTML.trim(),
     defesa:document.getElementById('f-defesa').innerHTML.trim(),
     tags:document.getElementById('f-tags').value.trim(),
