@@ -1156,7 +1156,7 @@ window.addEventListener('load', function(){
   var btnFiltro = document.getElementById('btn-open-filtro-cal');
   var panel = document.getElementById('fp-cal');
 
-  // Abrir/fechar painel
+  // Abrir/fechar painel ao clicar no botão
   if(btnFiltro){
     btnFiltro.addEventListener('click', function(e){
       e.stopPropagation();
@@ -1169,26 +1169,31 @@ window.addEventListener('load', function(){
     });
   }
 
-  // Chips via data-attributes — NÃO usa stopPropagation no painel
+  // Fechar ao clicar fora do painel e do botão
   document.addEventListener('click', function(e){
-    // Fechar painel ao clicar fora
     if(!e.target.closest('#fp-cal') && !e.target.closest('#btn-open-filtro-cal')){
       closeAllPanels();
-      return;
-    }
-    // Chip clicado
-    var chip = e.target.closest('[data-ctx][data-key][data-val]');
-    if(chip){
-      var ctx = chip.dataset.ctx;
-      var key = chip.dataset.key;
-      var val = chip.dataset.val;
-      toggleChip(ctx, key, val);
-    }
-    // Botão limpar
-    if(e.target.id === 'btn-limpar-cal'){
-      limparFiltros('cal');
     }
   });
+
+  // Chips — listener direto no painel, sem interferência
+  if(panel){
+    panel.addEventListener('click', function(e){
+      e.stopPropagation();
+
+      // Botão limpar
+      if(e.target.id === 'btn-limpar-cal'){
+        limparFiltros('cal');
+        return;
+      }
+
+      // Chip
+      var chip = e.target.closest('[data-ctx][data-key][data-val]');
+      if(chip){
+        toggleChip(chip.dataset.ctx, chip.dataset.key, chip.dataset.val);
+      }
+    });
+  }
 });
 
 function toggleChip(ctx,key,val){
