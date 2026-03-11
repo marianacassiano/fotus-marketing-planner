@@ -137,6 +137,13 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
 .cal-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:16px;}
 .cal-sidebar{width:270px;flex-shrink:0;display:flex;flex-direction:column;gap:14px;}
 .dispatch-card{background:white;border-radius:16px;padding:18px 20px;box-shadow:0 1px 4px rgba(0,0,0,.06);}
+.cal-cat-tabs{display:flex;gap:6px;}
+.cal-cat-tab{padding:8px 16px;border-radius:10px;border:1.5px solid var(--gray-200);background:white;font-family:'Sora',sans-serif;font-size:12px;font-weight:600;cursor:pointer;color:var(--gray-600);transition:all .15s;white-space:nowrap;}
+.cal-cat-tab:hover{border-color:var(--gray-400);}
+.cal-cat-tab.ativo{background:var(--purple);border-color:var(--purple);color:white;}
+.cal-cat-tab.tab-com.ativo{background:#1E88E5;border-color:#1E88E5;color:white;}
+.cal-cat-tab.tab-cont.ativo{background:#43A047;border-color:#43A047;color:white;}
+.cal-cat-tab.tab-ev.ativo{background:#FB8C00;border-color:#FB8C00;color:white;}
 .cal-month-row{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;}
 .cal-month-label{font-size:15px;font-weight:700;letter-spacing:.04em;}
 .cal-nav{display:flex;gap:6px;}
@@ -545,49 +552,11 @@ body{font-family:'Sora',sans-serif;background:var(--gray-50);color:var(--gray-80
   <div class="view active" id="view-calendario">
     <div class="view-toprow">
       <input type="text" class="search-input" id="search-cal" placeholder="🔍 Buscar campanha..." oninput="renderAll()">
-      <div class="filter-wrap">
-        <button class="btn-filtro" id="btn-open-filtro-cal">
-          ⚙ Filtros
-          <span class="filtro-count" id="fcnt-cal" style="display:none">0</span>
-          <span class="f-arrow">▾</span>
-        </button>
-        <div class="filtro-panel" id="fp-cal">
-          <div class="fp-section">
-            <div class="fp-label">Categoria</div>
-            <div class="fp-chips">
-              <button class="fp-chip cat-com" id="fpc-cal-COMERCIAL" data-ctx="cal" data-key="categoria" data-val="COMERCIAL">Comercial</button>
-              <button class="fp-chip cat-cont" id="fpc-cal-CONTEUDO" data-ctx="cal" data-key="categoria" data-val="CONTEUDO">Conteúdo</button>
-              <button class="fp-chip cat-ev" id="fpc-cal-EVENTOS" data-ctx="cal" data-key="categoria" data-val="EVENTOS">Eventos</button>
-            </div>
-          </div>
-          <div class="fp-divider"></div>
-          <div class="fp-section">
-            <div class="fp-label">Estratégia</div>
-            <div class="fp-chips">
-              <button class="fp-chip est-inb" id="fpc-cal-inbound" data-ctx="cal" data-key="estrategia" data-val="inbound">Inbound</button>
-              <button class="fp-chip est-soc" id="fpc-cal-rede_social" data-ctx="cal" data-key="estrategia" data-val="rede_social">Rede Social</button>
-              <button class="fp-chip est-perf" id="fpc-cal-performance" data-ctx="cal" data-key="estrategia" data-val="performance">Performance</button>
-            </div>
-          </div>
-          <div class="fp-divider"></div>
-          <div class="fp-section">
-            <div class="fp-label">Canais</div>
-            <div class="fp-chips">
-              <button class="fp-chip ch-wa" id="fpc-cal-wa" data-ctx="cal" data-key="canal" data-val="wa">WhatsApp</button>
-              <button class="fp-chip ch-email" id="fpc-cal-email" data-ctx="cal" data-key="canal" data-val="email">E-mail</button>
-              <button class="fp-chip ch-sms" id="fpc-cal-sms" data-ctx="cal" data-key="canal" data-val="sms">SMS</button>
-              <button class="fp-chip ch-ig" id="fpc-cal-instagram" data-ctx="cal" data-key="canal" data-val="instagram">Instagram</button>
-              <button class="fp-chip ch-fb" id="fpc-cal-facebook" data-ctx="cal" data-key="canal" data-val="facebook">Facebook</button>
-              <button class="fp-chip ch-li" id="fpc-cal-linkedin" data-ctx="cal" data-key="canal" data-val="linkedin">LinkedIn</button>
-              <button class="fp-chip ch-blog" id="fpc-cal-blog" data-ctx="cal" data-key="canal" data-val="blog">Blog</button>
-              <button class="fp-chip ch-out" id="fpc-cal-outros" data-ctx="cal" data-key="canal" data-val="outros">Outros</button>
-              <button class="fp-chip ch-ma" id="fpc-cal-meta_ads" data-ctx="cal" data-key="canal" data-val="meta_ads">Meta Ads</button>
-              <button class="fp-chip ch-ga" id="fpc-cal-google_ads" data-ctx="cal" data-key="canal" data-val="google_ads">Google Ads</button>
-            </div>
-          </div>
-          <div class="fp-divider"></div>
-          <div class="fp-footer"><button class="btn-limpar" id="btn-limpar-cal">Limpar filtros</button></div>
-        </div>
+      <div class="cal-cat-tabs">
+        <button class="cal-cat-tab ativo" id="tab-cat-TODOS" onclick="setCatTab('TODOS')">Todos</button>
+        <button class="cal-cat-tab tab-com" id="tab-cat-COMERCIAL" onclick="setCatTab('COMERCIAL')">Comercial</button>
+        <button class="cal-cat-tab tab-cont" id="tab-cat-CONTEUDO" onclick="setCatTab('CONTEUDO')">Conteúdo</button>
+        <button class="cal-cat-tab tab-ev" id="tab-cat-EVENTOS" onclick="setCatTab('EVENTOS')">Eventos</button>
       </div>
       <button class="btn-export" onclick="exportarCalendario()">📥 Exportar Calendário</button>
     </div>
@@ -1145,144 +1114,37 @@ function showToast(msg,type='success'){
 }
 
 // ── FILTROS ───────────────────────────────────────────────────────
-const fpState={cal:{categorias:[],estrategias:[],canais:[]},res:{categoria:null}};
+const fpState={res:{categoria:null}};
+let calCatTab='TODOS'; // 'TODOS' | 'COMERCIAL' | 'CONTEUDO' | 'EVENTOS'
 
-function closeAllPanels(){
-  document.querySelectorAll('.filtro-panel').forEach(p=>p.classList.remove('fp-open'));
-  document.querySelectorAll('.btn-filtro').forEach(b=>b.classList.remove('fp-open'));
-}
-// Inicializa eventos do filtro após DOM pronto
-window.addEventListener('load', function(){
-  var btnFiltro = document.getElementById('btn-open-filtro-cal');
-  var panel = document.getElementById('fp-cal');
 
-  // Abrir/fechar painel ao clicar no botão
-  if(btnFiltro){
-    btnFiltro.addEventListener('click', function(e){
-      e.stopPropagation();
-      var isOpen = panel.classList.contains('fp-open');
-      closeAllPanels();
-      if(!isOpen){
-        panel.classList.add('fp-open');
-        btnFiltro.classList.add('fp-open');
-      }
-    });
-  }
-
-  // Fechar ao clicar fora do painel e do botão
-  document.addEventListener('click', function(e){
-    if(!e.target.closest('#fp-cal') && !e.target.closest('#btn-open-filtro-cal')){
-      closeAllPanels();
-    }
+// ── FILTRO POR CATEGORIA (tabs simples) ──────────────────────────
+function setCatTab(cat){
+  calCatTab = cat;
+  ['TODOS','COMERCIAL','CONTEUDO','EVENTOS'].forEach(k=>{
+    const btn = document.getElementById('tab-cat-'+k);
+    if(btn) btn.classList.toggle('ativo', k===cat);
   });
-
-  // Chips — listener direto no painel, sem interferência
-  if(panel){
-    panel.addEventListener('click', function(e){
-      e.stopPropagation();
-
-      // Botão limpar
-      if(e.target.id === 'btn-limpar-cal'){
-        limparFiltros('cal');
-        return;
-      }
-
-      // Chip
-      var chip = e.target.closest('[data-ctx][data-key][data-val]');
-      if(chip){
-        toggleChip(chip.dataset.ctx, chip.dataset.key, chip.dataset.val);
-      }
-    });
-  }
-});
-
-function toggleChip(ctx,key,val){
-  if(ctx==='cal'){
-    const arr=fpState[ctx][key];
-    const idx=arr.indexOf(val);
-    if(idx>-1)arr.splice(idx,1);
-    else arr.push(val);
-  }else{
-    fpState[ctx][key]=fpState[ctx][key]===val?null:val;
-  }
-  syncChips(ctx);renderAll();
+  renderAll();
 }
-function limparFiltros(ctx){
-  if(ctx==='cal'){
-    fpState[ctx].categorias=[];
-    fpState[ctx].estrategias=[];
-    fpState[ctx].canais=[];
-  }else{
-    Object.keys(fpState[ctx]).forEach(k=>fpState[ctx][k]=null);
-  }
-  syncChips(ctx);renderAll();
-}
-function toggleAllFilters(ctx,key){
-  const s=fpState[ctx];
-  if(key==='categoria'){
-    const allSelected=['COMERCIAL','CONTEUDO','EVENTOS'].every(v=>s.categorias.includes(v));
-    s.categorias=allSelected?[]:['COMERCIAL','CONTEUDO','EVENTOS'];
-  }else if(key==='estrategia'){
-    const allSelected=['inbound','rede_social','performance'].every(v=>s.estrategias.includes(v));
-    s.estrategias=allSelected?[]:['inbound','rede_social','performance'];
-  }else if(key==='canal'){
-    const allCanais=['wa','email','sms','instagram','facebook','linkedin','blog','outros','meta_ads','google_ads'];
-    const allSelected=allCanais.every(v=>s.canais.includes(v));
-    s.canais=allSelected?[]:[...allCanais];
-  }
-  syncChips(ctx);renderAll();
-}
-function syncChips(ctx){
-  const s=fpState[ctx];
-  if(ctx==='cal'){
-    ['COMERCIAL','CONTEUDO','EVENTOS'].forEach(v=>{const el=document.getElementById('fpc-'+ctx+'-'+v);if(el)el.classList.toggle('fpa',s.categorias.includes(v));});
-    ['inbound','rede_social','performance'].forEach(v=>{const el=document.getElementById('fpc-'+ctx+'-'+v);if(el)el.classList.toggle('fpa',s.estrategias.includes(v));});
-    ['wa','email','sms','instagram','facebook','linkedin','blog','outros','meta_ads','google_ads'].forEach(v=>{const el=document.getElementById('fpc-'+ctx+'-'+v);if(el)el.classList.toggle('fpa',s.canais.includes(v));});
-    const n=s.categorias.length+s.estrategias.length+s.canais.length;
-    const cnt=document.getElementById('fcnt-'+ctx);
-    const btn=document.getElementById('btn-open-filtro-'+ctx)||document.getElementById('btn-filtro-'+ctx);
-    cnt.style.display=n>0?'inline-flex':'none';cnt.textContent=n;
-    btn.classList.toggle('has-filter',n>0);
-  }else{
-    ['COMERCIAL','CONTEUDO','EVENTOS'].forEach(v=>{const el=document.getElementById('fpc-'+ctx+'-'+v);if(el)el.classList.toggle('fpa',s.categoria===v);});
-    const n=Object.values(s).filter(v=>v!==null).length;
-    const cnt=document.getElementById('fcnt-'+ctx);
-    const btn=document.getElementById('btn-open-filtro-'+ctx)||document.getElementById('btn-filtro-'+ctx);
-    if(cnt){cnt.style.display=n>0?'inline-flex':'none';cnt.textContent=n;}
-    if(btn)btn.classList.toggle('has-filter',n>0);
-  }
-}
+
+
+
+
+
 function getFiltered(ctx){
-  const s=fpState[ctx];
   const searchEl=document.getElementById(ctx==='cal'?'search-cal':'search-res');
   const q=searchEl?searchEl.value.trim().toLocaleLowerCase('pt-BR'):'';
   const isUser=currentUser&&currentUser.role==='user';
   return campaigns.filter(c=>{
     if(isUser&&!getCats(c).includes('COMERCIAL'))return false;
     if(ctx==='cal'){
-      if(s.categorias.length>0&&!s.categorias.some(cat=>getCats(c).includes(cat)))return false;
-      if(s.estrategias.length>0){
-        const hasEst=s.estrategias.some(e=>{
-          if(e==='inbound')return(c.inbound.wa||[]).length||(c.inbound.email||[]).length||(c.inbound.sms||[]).length;
-          if(e==='rede_social')return(c.rede_social.instagram||[]).length||(c.rede_social.facebook||[]).length||(c.rede_social.linkedin||[]).length||(c.rede_social.blog||[]).length||(c.rede_social.outros||[]).length;
-          if(e==='performance')return(c.performance.meta_ads||[]).length||(c.performance.google_ads||[]).length;
-          return false;
-        });
-        if(!hasEst)return false;
-      }
-      if(s.canais.length>0){
-        const canalMap={
-          wa:'inbound.wa',email:'inbound.email',sms:'inbound.sms',
-          instagram:'rede_social.instagram',facebook:'rede_social.facebook',linkedin:'rede_social.linkedin',blog:'rede_social.blog',outros:'rede_social.outros',
-          meta_ads:'performance.meta_ads',google_ads:'performance.google_ads'
-        };
-        const hasCanal=s.canais.some(ch=>{const path=canalMap[ch];const parts=path.split('.');return(c[parts[0]][parts[1]]||[]).length;});
-        if(!hasCanal)return false;
-      }
+      if(calCatTab!=='TODOS'&&!getCats(c).includes(calCatTab))return false;
     }else{
-      if(s.categoria&&!getCats(c).includes(s.categoria))return false;
+      const s=fpState[ctx];
+      if(s&&s.categoria&&!getCats(c).includes(s.categoria))return false;
     }
-    if(q&&!c.name.toLocaleLowerCase('pt-BR').includes(q.toLocaleLowerCase('pt-BR')))return false;
+    if(q&&!c.name.toLocaleLowerCase('pt-BR').includes(q))return false;
     return true;
   });
 }
