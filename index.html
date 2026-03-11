@@ -1181,7 +1181,8 @@ async function loadCampaigns(){
 
 async function dbInsert(data){
   const payload={
-    name:data.name,color:data.color,categoria:data.categoria,
+    name:data.name,color:data.color,
+    categoria:Array.isArray(data.categoria)?data.categoria:(data.categoria?[data.categoria]:[]),
     inicio:data.inicio,fim:data.fim,briefing:data.briefing||'',defesa:data.defesa||'',tags:data.tags||'',
     inbound_wa:data.inbound_wa||[],inbound_email:data.inbound_email||[],inbound_sms:data.inbound_sms||[],
     rede_social_instagram:data.rede_social_instagram||[],rede_social_facebook:data.rede_social_facebook||[],rede_social_linkedin:data.rede_social_linkedin||[],rede_social_blog:data.rede_social_blog||[],rede_social_outros:data.rede_social_outros||[],
@@ -1204,7 +1205,8 @@ async function dbInsert(data){
 
 async function dbUpdate(id,data){
   const payload={
-    name:data.name,color:data.color,categoria:data.categoria,
+    name:data.name,color:data.color,
+    categoria:Array.isArray(data.categoria)?data.categoria:(data.categoria?[data.categoria]:[]),
     inicio:data.inicio,fim:data.fim,briefing:data.briefing||'',defesa:data.defesa||'',tags:data.tags||'',
     inbound_wa:data.inbound_wa||[],inbound_email:data.inbound_email||[],inbound_sms:data.inbound_sms||[],
     rede_social_instagram:data.rede_social_instagram||[],rede_social_facebook:data.rede_social_facebook||[],rede_social_linkedin:data.rede_social_linkedin||[],rede_social_blog:data.rede_social_blog||[],rede_social_outros:data.rede_social_outros||[],
