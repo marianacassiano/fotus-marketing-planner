@@ -1677,8 +1677,14 @@ function renderDashboard(){
   // ── Período selecionado ──
   const de=document.getElementById('dash-de')?.value||'';
   const ate=document.getElementById('dash-ate')?.value||ts;
-  const all=campaigns.filter(c=>c.fim>=de&&c.inicio<=ate);
-  document.getElementById('dash-kpis').innerHTML='<div class="kpi-card"><div class="kpi-label">Total Campanhas</div><div class="kpi-value" style="color:var(--purple)">'+all.length+'</div><div class="kpi-sub">'+ativas.length+' ativas agora</div></div><div class="kpi-card"><div class="kpi-label">Ativas</div><div class="kpi-value" style="color:var(--green)">'+ativas.length+'</div><div class="kpi-sub">'+breve.length+' em breve</div></div><div class="kpi-card"><div class="kpi-label">Encerradas</div><div class="kpi-value" style="color:var(--gray-400)">'+enc.length+'</div><div class="kpi-sub">este período</div></div><div class="kpi-card"><div class="kpi-label">Total Ações</div><div class="kpi-value" style="color:var(--orange)">'+td+'</div><div class="kpi-sub">em todos os canais</div></div>';
+  const all=campaigns.filter(c=>(!de||c.fim>=de)&&c.inicio<=ate);
+
+  // KPIs filtrados pelo período
+  const ativas=all.filter(c=>c.status!=='cancelada'&&c.inicio<=ts&&c.fim>=ts);
+  const enc=all.filter(c=>c.status!=='cancelada'&&c.fim<ts);
+  const breve=all.filter(c=>c.status==='ativa'&&c.inicio>ts);
+  const td=all.reduce((a,c)=>a+(c.inbound?.wa||[]).length+(c.inbound?.email||[]).length+(c.inbound?.sms||[]).length+(c.rede_social?.instagram||[]).length+(c.rede_social?.facebook||[]).length+(c.rede_social?.linkedin||[]).length+(c.rede_social?.blog||[]).length+(c.rede_social?.outros||[]).length+(c.performance?.meta_ads||[]).length+(c.performance?.google_ads||[]).length,0);
+  document.getElementById('dash-kpis').innerHTML='<div class="kpi-card"><div class="kpi-label">Total Campanhas</div><div class="kpi-value" style="color:var(--purple)">'+all.length+'</div><div class="kpi-sub">no período</div></div><div class="kpi-card"><div class="kpi-label">Ativas</div><div class="kpi-value" style="color:var(--green)">'+ativas.length+'</div><div class="kpi-sub">'+breve.length+' em breve</div></div><div class="kpi-card"><div class="kpi-label">Encerradas</div><div class="kpi-value" style="color:var(--gray-400)">'+enc.length+'</div><div class="kpi-sub">no período</div></div><div class="kpi-card"><div class="kpi-label">Total Ações</div><div class="kpi-value" style="color:var(--orange)">'+td+'</div><div class="kpi-sub">em todos os canais</div></div>';
   // ── Dados de canais ──
   const cc={COMERCIAL:0,CONTEUDO:0,EVENTOS:0};all.forEach(c=>{getCats(c).forEach(cat=>{if(cc[cat]!==undefined)cc[cat]++;});});
   const wa=all.reduce((a,c)=>a+(c.inbound?.wa||[]).length,0),em=all.reduce((a,c)=>a+(c.inbound?.email||[]).length,0),sm=all.reduce((a,c)=>a+(c.inbound?.sms||[]).length,0),ig=all.reduce((a,c)=>a+(c.rede_social?.instagram||[]).length,0),fb=all.reduce((a,c)=>a+(c.rede_social?.facebook||[]).length,0),li=all.reduce((a,c)=>a+(c.rede_social?.linkedin||[]).length,0),bl=all.reduce((a,c)=>a+(c.rede_social?.blog||[]).length,0),ou=all.reduce((a,c)=>a+(c.rede_social?.outros||[]).length,0),ma=all.reduce((a,c)=>a+(c.performance?.meta_ads||[]).length,0),ga=all.reduce((a,c)=>a+(c.performance?.google_ads||[]).length,0);
