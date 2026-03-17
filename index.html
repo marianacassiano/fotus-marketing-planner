@@ -2,210 +2,168 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOTUS - Inteligência de Marketing</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;600;800&display=swap" rel="stylesheet">
+    <title>FOTUS - Inteligência AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        :root {
-            --purple: #0D518E; --purple-pale: #F0F4F8;
-            --orange: #FAB515; --gray-50: #F8F9FC;
-            --gray-200: #E2E6EF; --gray-400: #9BA3B8; --gray-800: #333;
-        }
+        :root { --purple: #0D518E; --orange: #FAB515; --gray-50: #F8F9FC; --gray-200: #E2E6EF; }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Sora', sans-serif; }
-        body { background: var(--gray-50); color: var(--gray-800); }
-
-        /* Header */
-        .header { background: white; border-bottom: 1px solid var(--gray-200); padding: 0 30px; height: 70px; display: flex; align-items: center; position: sticky; top: 0; z-index: 100; }
-        .header-right { margin-left: auto; display: flex; gap: 12px; align-items: center; }
-
-        /* Grid & Cards */
-        .container { padding: 30px; max-width: 1400px; margin: 0 auto; }
-        .intel-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin-top: 20px; }
-        .card { background: white; border-radius: 16px; padding: 24px; border: 1px solid var(--gray-200); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
-        .card-title { font-size: 11px; font-weight: 800; text-transform: uppercase; color: var(--gray-400); margin-bottom: 15px; }
-
-        /* UI Elements */
-        .btn-main { background: var(--purple); color: white; border: none; padding: 12px 20px; border-radius: 10px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; }
-        .btn-config { background: #eee; border: none; padding: 12px; border-radius: 10px; cursor: pointer; }
-        .tema-row { margin-bottom: 15px; }
-        .tema-bar-bg { height: 8px; background: #eee; border-radius: 4px; margin-top: 5px; overflow: hidden; }
-        .tema-bar-fill { height: 100%; background: var(--purple); border-radius: 4px; transition: width 0.5s; }
-        .ideia-item { padding: 12px; background: var(--gray-50); border-radius: 8px; margin-bottom: 10px; border-left: 4px solid var(--purple); }
-
-        /* Modal */
-        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; z-index: 200; }
+        body { background: var(--gray-50); padding: 30px; }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px; background: white; padding: 20px; border-radius: 15px; border: 1px solid var(--gray-200); }
+        .card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
+        .card { background: white; padding: 24px; border-radius: 16px; border: 1px solid var(--gray-200); box-shadow: 0 4px 6px rgba(0,0,0,0.02); }
+        .btn-analisar { background: var(--purple); color: white; border: none; padding: 12px 24px; border-radius: 10px; cursor: pointer; font-weight: 600; }
+        .btn-config { background: #eee; border: none; padding: 12px; border-radius: 10px; cursor: pointer; margin-right: 10px; }
+        .modal { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
         .modal.active { display:flex; }
         .modal-content { background:white; padding:30px; border-radius:20px; width:400px; }
         .input-key { width:100%; padding:12px; margin:15px 0; border:1px solid #ddd; border-radius:8px; }
+        .tema-bar { height: 8px; background: var(--purple); border-radius: 4px; }
     </style>
 </head>
 <body>
 
-    <header class="header">
-        <div style="font-weight: 800; font-size: 20px; color: var(--purple);">FOTUS <span style="font-weight:300; color:#999;">| IA</span></div>
-        <div class="header-right">
-            <span id="txt-last-update" style="font-size: 11px; color: #999;"></span>
-            <button class="btn-config" onclick="toggleModal(true)">⚙️</button>
-            <button class="btn-main" id="btn-analisar" onclick="runIntelAnalysis()">⚡ Analisar Agora</button>
+    <div class="header">
+        <div style="font-weight: 800; font-size: 20px; color: var(--purple);">FOTUS PLANNER</div>
+        <div>
+            <button class="btn-config" onclick="toggleModal(true)">⚙️ Configurar Chave</button>
+            <button class="btn-analisar" id="btn-run" onclick="runIntelAnalysis()">⚡ Analisar Agora</button>
         </div>
-    </header>
+    </div>
 
-    <main class="container">
-        <div id="dashboard-content">
-            </div>
-        <div id="analise-text-container" class="card" style="margin-top:20px; display:none;">
-            <div class="card-title">Análise Estratégica Detalhada</div>
-            <p id="txt-analise" style="line-height:1.6; color:#555;"></p>
+    <div id="dashboard" class="card-grid">
         </div>
-    </main>
 
     <div id="modal-key" class="modal">
         <div class="modal-content">
-            <h3>Configurar Chave Groq</h3>
-            <p style="font-size:12px; color:#666; margin-top:5px;">Sua chave fica salva no Supabase para uso futuro.</p>
+            <h3>Configurar Groq API</h3>
             <input type="password" id="input-key" class="input-key" placeholder="gsk_...">
-            <div style="display:flex; gap:10px;">
-                <button onclick="toggleModal(false)" style="flex:1; padding:10px; border:none; border-radius:8px;">Cancelar</button>
-                <button onclick="saveKey()" style="flex:1; padding:10px; background:var(--purple); color:white; border:none; border-radius:8px;">Salvar</button>
-            </div>
+            <button onclick="saveKey()" style="width:100%; padding:12px; background:var(--purple); color:white; border:none; border-radius:8px; cursor:pointer;">Salvar no Supabase</button>
+            <button onclick="toggleModal(false)" style="width:100%; margin-top:10px; background:none; border:none; color:#666; cursor:pointer;">Cancelar</button>
         </div>
     </div>
 
     <script>
-        // Configurações de Estado
-        let GROQ_API_KEY = "";
-        let isRunning = false;
-        const userId = "user_default"; // Substitua pelo ID real do usuário logado
+        // Use o ID de usuário que está nas suas imagens (pode ser fixo ou dinâmico)
+        const USER_ID = "63d76b1e-28f7-4a00-9844-075276e02621"; 
 
-        // 1. Inicialização
-        window.onload = async () => {
-            await loadKeyFromSupabase();
-            await loadLatestAnalysis();
-        };
-
-        // 2. Buscar Chave no Supabase
-        async function loadKeyFromSupabase() {
-            try {
-                const data = await sbFetch(`groq_config?userid=eq.${userId}&limit=1`);
-                if (data && data.length > 0) {
-                    GROQ_API_KEY = data[0].groqapikey;
-                }
-            } catch (e) { console.error("Erro ao carregar chave:", e); }
-        }
-
-        // 3. Salvar Chave no Supabase
+        // 1. SALVAR CHAVE NO BANCO
         async function saveKey() {
             const key = document.getElementById('input-key').value.trim();
-            if (!key.startsWith('gsk_')) return alert("Chave inválida!");
+            if (!key.startsWith('gsk_')) return alert("A chave deve começar com gsk_");
 
+            const payload = { userid: USER_ID, groqapikey: key, updatedat: new Date() };
+            
             try {
-                await sbFetch('groq_config', 'POST', { userid: userId, groqapikey: key, updatedat: new Date() });
-                GROQ_API_KEY = key;
+                // Tentamos buscar se já existe para atualizar (UPSERT)
+                await sbFetch('groq_config', 'POST', payload); 
                 alert("Chave salva com sucesso!");
                 toggleModal(false);
-            } catch (e) { alert("Erro ao salvar chave."); }
+            } catch (e) {
+                alert("Erro ao salvar no banco. Verifique sua conexão.");
+            }
         }
 
-        // 4. Rodar Análise (IA)
+        // 2. FUNÇÃO PRINCIPAL DE ANÁLISE
         async function runIntelAnalysis() {
-            if (isRunning) return;
-            if (!GROQ_API_KEY) {
-                alert("Configure a chave da API primeiro!");
-                return toggleModal(true);
-            }
-
-            isRunning = true;
-            const btn = document.getElementById('btn-analisar');
-            btn.innerHTML = "⏳ Analisando...";
+            const btn = document.getElementById('btn-run');
+            btn.innerHTML = "⏳ Buscando chave...";
+            btn.disabled = true;
 
             try {
-                const prompt = "Analise o mercado solar brasileiro atual. Retorne um JSON com: temas (lista com nome e score), ideias (lista com titulo e tipo) e analise (string textual).";
+                // BUSCA A CHAVE DIRETO NO BANCO ANTES DE TUDO
+                const configData = await sbFetch(`groq_config?userid=eq.${USER_ID}&limit=1`);
                 
+                if (!configData || configData.length === 0 || !configData[0].groqapikey) {
+                    btn.innerHTML = "⚡ Analisar Agora";
+                    btn.disabled = false;
+                    alert("Chave não encontrada no banco! Use o botão de engrenagem.");
+                    return toggleModal(true);
+                }
+
+                const REAL_KEY = configData[0].groqapikey;
+                btn.innerHTML = "🚀 IA Processando...";
+
+                // CHAMADA PARA O GROQ
                 const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
                     method: 'POST',
-                    headers: { 'Authorization': `Bearer ${GROQ_API_KEY}`, 'Content-Type': 'application/json' },
+                    headers: { 
+                        'Authorization': `Bearer ${REAL_KEY}`, 
+                        'Content-Type': 'application/json' 
+                    },
                     body: JSON.stringify({
                         model: "llama3-8b-8192",
-                        messages: [{role: "user", content: prompt}],
+                        messages: [{role: "user", content: "Gere um JSON com: temas (lista com nome e score), ideias (lista com titulo) e analise (string) sobre energia solar."}],
                         response_format: { type: "json_object" }
                     })
                 });
 
+                if (!response.ok) throw new Error("A chave do Groq é inválida ou expirou.");
+
                 const resJson = await response.json();
                 const aiData = JSON.parse(resJson.choices[0].message.content);
-                const now = new Date().toISOString();
 
-                // Salvar resultado no Supabase
+                // SALVA A ANÁLISE NO BANCO
                 await sbFetch('analyses', 'POST', {
-                    userid: userId,
+                    userid: USER_ID,
                     radardata: JSON.stringify(aiData.temas),
                     ideasdata: JSON.stringify(aiData.ideias),
                     alertasdata: JSON.stringify({texto: aiData.analise}),
-                    updatedat: now
+                    updatedat: new Date()
                 });
 
-                renderUI(aiData.temas, aiData.ideias, aiData.analise, now);
-                alert("Análise concluída!");
+                renderUI(aiData);
+                alert("Análise atualizada!");
 
             } catch (e) {
-                alert("Erro na análise: Verifique sua chave ou conexão.");
+                alert("Erro: " + e.message);
             } finally {
-                isRunning = false;
                 btn.innerHTML = "⚡ Analisar Agora";
+                btn.disabled = false;
             }
         }
 
-        // 5. Carregar última análise do Banco
-        async function loadLatestAnalysis() {
-            try {
-                const rows = await sbFetch(`analyses?userid=eq.${userId}&order=updatedat.desc&limit=1`);
-                if (rows && rows.length > 0) {
-                    const r = rows[0];
-                    renderUI(JSON.parse(r.radardata), JSON.parse(r.ideasdata), JSON.parse(r.alertasdata).texto, r.updatedat);
-                }
-            } catch (e) { console.error("Erro ao carregar histórico:", e); }
+        // 3. RENDERIZAR NA TELA
+        function renderUI(data) {
+            const dash = document.getElementById('dashboard');
+            dash.innerHTML = `
+                <div class="card"><h3>Temas</h3>${data.temas.map(t => `<p>${t.nome}</p><div class="tema-bar" style="width:${t.score}%"></div>`).join('')}</div>
+                <div class="card"><h3>Ideias</h3>${data.ideias.map(i => `<p>• ${i.titulo}</p>`).join('')}</div>
+                <div class="card"><h3>Análise</h3><p style="font-size:13px;">${data.analise}</p></div>
+            `;
         }
 
-        // 6. Renderizar Interface
-        function renderUI(temas, ideias, analise, data) {
-            document.getElementById('txt-last-update').innerText = "Última atualização: " + new Date(data).toLocaleString();
-            
-            let dashboard = `
-                <div class="intel-grid">
-                    <div class="card"><div class="card-title">🔥 Temas Quentes</div>${temas.map(t => `
-                        <div class="tema-row">
-                            <div style="display:flex; justify-content:space-between; font-size:12px;"><span>${t.nome}</span><span>${t.score}%</span></div>
-                            <div class="tema-bar-bg"><div class="tema-bar-fill" style="width:${t.score}%"></div></div>
-                        </div>
-                    `).join('')}</div>
-                    <div class="card"><div class="card-title">💡 Ideias de Conteúdo</div>${ideias.slice(0,4).map(i => `
-                        <div class="ideia-item"><strong>${i.titulo}</strong><br><small style="color:var(--purple)">${i.tipo}</small></div>
-                    `).join('')}</div>
-                    <div class="card"><div class="card-title">📈 Status Mercado</div>
-                        <p style="font-size:13px; color:#666;">O mercado solar apresenta alta demanda em conteúdos técnicos e prova social. Foco em ROI para o cliente final.</p>
-                    </div>
-                </div>`;
-            
-            document.getElementById('dashboard-content').innerHTML = dashboard;
-            document.getElementById('analise-text-container').style.display = "block";
-            document.getElementById('txt-analise').innerText = analise;
-        }
-
-        // Helpers
         function toggleModal(show) { document.getElementById('modal-key').classList.toggle('active', show); }
-        
-        // Mock da sua função sbFetch (Substitua pela sua lógica real de fetch do Supabase)
+
+        // 4. MOTOR DE COMUNICAÇÃO SUPABASE (COLE SEUS DADOS AQUI)
         async function sbFetch(endpoint, method = 'GET', body = null) {
-            // Exemplo de URL: https://sua-id.supabase.co/rest/v1/tabela
-            const URL = "SUA_SUPABASE_URL_AQUI/rest/v1/" + endpoint; 
-            const headers = { "apikey": "SUA_ANON_KEY", "Authorization": "Bearer SUA_ANON_KEY", "Content-Type": "application/json", "Prefer": "return=representation" };
-            
-            const options = { method, headers };
+            const SUPABASE_URL = "SUA_URL_AQUI"; // Ex: https://xyz.supabase.co
+            const SUPABASE_KEY = "SUA_ANON_KEY_AQUI";
+
+            const options = {
+                method,
+                headers: {
+                    "apikey": SUPABASE_KEY,
+                    "Authorization": `Bearer ${SUPABASE_KEY}`,
+                    "Content-Type": "application/json",
+                    "Prefer": "return=representation"
+                }
+            };
             if (body) options.body = JSON.stringify(body);
 
-            const res = await fetch(URL, options);
+            const res = await fetch(`${SUPABASE_URL}/rest/v1/${endpoint}`, options);
+            if (!res.ok) throw new Error("Erro na requisição ao Supabase");
             return res.json();
         }
+
+        // Carregar última análise ao abrir
+        window.onload = async () => {
+            const last = await sbFetch(`analyses?userid=eq.${USER_ID}&order=updatedat.desc&limit=1`);
+            if(last.length > 0) renderUI({
+                temas: JSON.parse(last[0].radardata),
+                ideias: JSON.parse(last[0].ideasdata),
+                analise: JSON.parse(last[0].alertasdata).texto
+            });
+        };
     </script>
 </body>
 </html>
