@@ -2,123 +2,98 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FOTUS: PLANNER MARKETING</title>
-    <link rel="icon" href="https://energia.fotus.com.br/wp-content/uploads/2025/02/LOGO_Fotus-1A-e1739992227141.png" type="image/png">
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600;700&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <title>FOTUS - Inteligência AI</title>
     <style>
-        :root {
-            --purple: #0D518E; --purple-light: #1A6BB5; --purple-pale: #E7E7E7;
-            --orange: #FAB515; --teal: #00B2C8; --green: #00C07A; --red: #E53935;
-            --gray-50: #F8F9FC; --gray-100: #F0F2F7; --gray-200: #E2E6EF;
-            --gray-400: #9BA3B8; --gray-600: #5A6375; --gray-800: #454444;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: 'Sora', sans-serif; background: var(--gray-50); color: var(--gray-800); min-height: 100vh; }
-
-        /* Estilos da Topbar e Nav */
-        .topbar { background: white; border-bottom: 1px solid var(--gray-200); display: flex; align-items: center; padding: 0 32px; height: 60px; position: sticky; top: 0; z-index: 100; }
-        .nav-btn { padding: 8px 18px; border-radius: 10px; font-family: 'Sora', sans-serif; font-size: 13px; font-weight: 500; cursor: pointer; border: none; background: transparent; color: var(--gray-600); transition: all .15s; }
-        .nav-btn.active { background: var(--purple-pale); color: var(--purple); font-weight: 600; }
-
-        /* Views */
-        .view { display: none; padding: 24px 32px; }
-        .view.active { display: block; }
-
-        /* Inteligência Cards */
-        .intel-grid-3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; }
-        .intel-card { background: white; border-radius: 16px; padding: 20px; box-shadow: 0 1px 4px rgba(0,0,0,.06); }
-        .intel-card-title { font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--gray-400); }
-        
-        /* Tema Row */
-        .intel-tema-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
-        .intel-tema-bar-wrap { flex: 1; height: 8px; background: var(--gray-100); border-radius: 4px; overflow: hidden; }
-        .intel-tema-bar { height: 100%; transition: width 1s ease-out; }
-        
-        /* Ideia Card */
-        .intel-ideia-card { background: var(--gray-50); border-radius: 12px; padding: 12px; margin-bottom: 10px; border-left: 4px solid var(--purple); }
-        .intel-ideia-tipo { font-size: 9px; font-weight: 800; padding: 2px 6px; border-radius: 4px; text-transform: uppercase; display: inline-block; margin-bottom: 4px; }
-        .intel-ideia-titulo { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
-        .intel-ideia-desc { font-size: 11px; color: var(--gray-600); line-height: 1.4; }
-
-        .btn-analisar { background: var(--purple); color: white; border: none; padding: 10px 20px; border-radius: 10px; cursor: pointer; font-weight: 700; font-size: 13px; display: flex; align-items: center; gap: 8px; }
-        .btn-analisar:disabled { opacity: 0.6; cursor: not-allowed; }
+        /* Estilos simplificados para o exemplo */
+        :root { --purple: #0D518E; --gray-50: #F8F9FC; --gray-400: #9BA3B8; }
+        body { font-family: 'Sora', sans-serif; background: var(--gray-50); }
+        .intel-card { background: white; border-radius: 12px; padding: 20px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.05); }
+        .intel-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; }
+        .btn-analisar { background: var(--purple); color: white; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+        .modal-overlay { display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.5); align-items:center; justify-content:center; }
+        .modal-overlay.open { display:flex; }
+        .modal { background:white; padding:30px; border-radius:12px; width:400px; }
     </style>
 </head>
 <body>
 
-    <div class="topbar">
-        <div style="font-weight: 800; color: var(--purple); margin-right: 40px;">FOTUS PLANNER</div>
-        <nav style="display: flex; gap: 10px;">
-            <button class="nav-btn active" onclick="switchView('intel')">Inteligência AI</button>
-            <button class="nav-btn" onclick="switchView('calendar')">Calendário</button>
-        </nav>
-        <div id="intel-last-run" style="margin-left: auto; font-size: 11px; color: var(--gray-400); font-family: 'DM Mono';"></div>
-    </div>
-
-    <div id="view-intel" class="view active">
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-            <h2>Radar de Mercado Solar</h2>
-            <button class="btn-analisar" id="btn-run-intel" onclick="runIntelAnalysis()">
-                <span>⚡ Analisar Agora</span>
-            </button>
-        </div>
-        <div id="intel-content">
+    <div style="padding: 30px;">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:30px;">
+            <h2>Módulo de Inteligência Solar</h2>
+            <div style="display:flex; gap:10px;">
+                <button onclick="openIntelConfigModal()" style="background:none; border:1px solid #ccc; border-radius:8px; cursor:pointer; padding:5px 10px;">⚙️</button>
+                <button class="btn-analisar" id="btn-run-intel" onclick="runIntelAnalysis()">⚡ Analisar Agora</button>
             </div>
+        </div>
+        
+        <div id="intel-last-run" style="font-size:12px; color:var(--gray-400); margin-bottom:10px;"></div>
+        <div id="view-intel-content"></div>
     </div>
 
-    <div id="view-calendar" class="view">
-        <h2>Calendário de Conteúdo</h2>
-        <p>Em breve...</p>
+    <div id="modal-intel-config" class="modal-overlay">
+        <div class="modal">
+            <h3>Configurar Groq API</h3>
+            <p style="font-size:12px; color:#666;">A chave será salva no seu perfil do Supabase.</p>
+            <input type="password" id="input-groq-key" style="width:100%; padding:10px; margin:15px 0;" placeholder="gsk_...">
+            <div style="display:flex; justify-content:flex-end; gap:10px;">
+                <button onclick="closeIntelConfigModal()">Cancelar</button>
+                <button onclick="saveIntelKey()" style="background:var(--purple); color:white; border:none; padding:8px 15px; border-radius:5px;">Salvar no Banco</button>
+            </div>
+        </div>
     </div>
 
     <script>
-        /* --- ESTADO GLOBAL --- */
-        let currentUser = { id: 'user_123' }; // Simulação de usuário logado
+        /* --- 1. VARIÁVEIS GLOBAIS DE ESTADO --- 
+           (Substituição 1: Sem localStorage)
+        */
         let intelConcorrentes = [];
         let intelAnalysisRunning = false;
         let intelLastAnalysis = null;
         let intelCurrentTab = 'radar';
         let intelData = { radar: null, ideias: null, alertas: null };
+        let GROQ_API_KEY = ""; // Carregada do banco groq_config
 
-        /* --- MOCK SUPABASE (Substituir por sua função real sbFetch) --- */
-        async function sbFetch(table, method = 'GET', data = null) {
-            console.log(`Chamada Supabase: ${method} em ${table}`, data);
-            // Simulação de retorno do banco
-            return []; 
-        }
-
-        /* --- NAVEGAÇÃO --- */
-        function switchView(viewId) {
-            document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
-            document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
-            document.getElementById(`view-${viewId}`).classList.add('active');
-            event.currentTarget.classList.add('active');
-            if(viewId === 'intel') renderIntelView();
-        }
-
-        /* --- LÓGICA DE INTELIGÊNCIA (SUAS SUBSTITUIÇÕES AQUI) --- */
-
+        /* --- 2. CARREGAMENTO INICIAL (Substituição 2) --- 
+        */
         async function renderIntelView() {
-            const cont = document.getElementById('intel-content');
             Promise.all([
-                loadAnalysesFromSupabase(),
-                loadCompetitorsFromSupabase()
+                loadGroqKeyFromSupabase(), // Busca chave na tabela groq_config
+                loadAnalysesFromSupabase(), // Busca última análise na tabela analyses
+                loadCompetitorsFromSupabase() // Busca lista de concorrentes
             ]).then(() => {
-                renderIntelTab('radar');
+                renderIntelTab(intelCurrentTab);
             }).catch(e => console.error('Erro ao carregar inteligência:', e));
         }
 
+        /* --- 3. BUSCAR CHAVE NO SUPABASE (Tabela groq_config) --- 
+        */
+        async function loadGroqKeyFromSupabase() {
+            try {
+                const rows = await sbFetch('groq_config?userid=eq.' + currentUser.id + '&limit=1');
+                if (rows && rows.length > 0) {
+                    GROQ_API_KEY = rows[0].groqapikey;
+                    return true;
+                }
+                return false;
+            } catch (e) {
+                console.error("Erro ao carregar chave do banco:", e);
+                return false;
+            }
+        }
+
+        /* --- 4. CARREGAR ANÁLISES (Substituição 5 unificada) --- 
+        */
         async function loadAnalysesFromSupabase() {
             try {
                 const rows = await sbFetch('analyses?userid=eq.' + currentUser.id + '&order=updatedat.desc&limit=1');
                 if (!rows || rows.length === 0) return;
+                
                 const latest = rows[0];
                 intelLastAnalysis = latest.updatedat;
                 intelData.radar   = latest.radardata   ? JSON.parse(latest.radardata)   : null;
                 intelData.ideias  = latest.ideasdata   ? JSON.parse(latest.ideasdata)   : null;
                 intelData.alertas = latest.alertasdata ? JSON.parse(latest.alertasdata) : null;
+                
                 const lastEl = document.getElementById('intel-last-run');
                 if (lastEl && intelLastAnalysis) lastEl.textContent = 'Última análise: ' + new Date(intelLastAnalysis).toLocaleString('pt-BR');
             } catch (e) {
@@ -126,127 +101,141 @@
             }
         }
 
-        async function loadCompetitorsFromSupabase() {
-            // Lógica para carregar concorrentes cadastrados
-            intelConcorrentes = []; 
-        }
-
-        function renderIntelTab(tab) {
-            const cont = document.getElementById('intel-content');
-            if (tab === 'radar') renderTabRadar(cont);
-        }
-
+        /* --- 5. RENDERIZAÇÃO DO RADAR (Substituição 3) --- 
+        */
         function renderTabRadar(cont) {
             const stored = intelData.radar;
             const storedIdeias = intelData.ideias;
             if (!stored) {
-                cont.innerHTML = `<div style="text-align:center; padding: 60px; color: var(--gray-400);">📡 Radar ainda não executado. Clique em analisar.</div>`;
+                cont.innerHTML = `<div style="padding:40px; text-align:center; color:#999;">📡 Clique em Analisar para começar.</div>`;
                 return;
             }
             const ts = intelLastAnalysis ? new Date(intelLastAnalysis).toLocaleString('pt-BR') : '—';
             
             cont.innerHTML = `
-            <div class="intel-grid-3">
-                <div class="intel-card">
-                    <div class="intel-card-title" style="margin-bottom:14px;">🔥 Top Temas da Semana</div>
-                    <div id="intel-radar-temas"></div>
+                <div class="intel-grid-3">
+                    <div class="intel-card"><strong>Top Temas</strong><div id="intel-radar-temas"></div></div>
+                    <div class="intel-card"><strong>Formatos</strong><div id="intel-radar-formatos"></div></div>
+                    <div class="intel-card"><strong>Ideias</strong><div id="intel-ideias-lista"></div></div>
                 </div>
-                <div class="intel-card">
-                    <div class="intel-card-title" style="margin-bottom:14px;">🏆 Formatos que Performam</div>
-                    <div id="intel-radar-formatos"></div>
-                </div>
-                <div class="intel-card">
-                    <div class="intel-card-title" style="margin-bottom:14px;">📅 Ideias para essa Semana</div>
-                    <div id="intel-ideias-lista"></div>
-                </div>
-            </div>
-            <div class="intel-card" style="margin-top:14px;">
-                <div class="intel-card-title" style="margin-bottom:14px;">📝 Análise Completa</div>
-                <div id="intel-radar-analise" style="font-size:13px; line-height:1.6; color: var(--gray-600);"></div>
-            </div>
-            <div style="font-size:11px;color:var(--gray-400);text-align:right;margin-top:8px;font-family:'DM Mono',monospace;">
-                Última análise: ${ts}
-            </div>`;
+                <div class="intel-card"><strong>Análise Completa</strong><div id="intel-radar-analise"></div></div>
+                <div style="text-align:right; font-size:10px; color:#999;">Atualizado em: ${ts}</div>
+            `;
 
-            // Temas
+            // Preenche Temas
             const temasEl = document.getElementById('intel-radar-temas');
             (stored.temas || []).forEach((t, i) => {
-                temasEl.innerHTML += `<div class="intel-tema-row">
-                    <span style="font-size:11px; font-weight:700; width:15px;">${i+1}</span>
-                    <span style="font-size:12px; flex:1;">${t.tema || t.nome}</span>
-                    <div class="intel-tema-bar-wrap"><div class="intel-tema-bar" style="width:${t.score}%; background:var(--purple)"></div></div>
-                    <span style="font-size:10px; font-weight:700;">${t.score}%</span>
-                </div>`;
+                temasEl.innerHTML += `<div style="font-size:12px; margin-top:5px;">${i+1}. ${t.tema || t.nome} (${t.score}%)</div>`;
             });
 
-            // Ideias
-            const TIPO_COLORS = { Reels:'#E53935', Carrossel:'#1E88E5', Story:'#FB8C00', Post:'#43A047' };
+            // Preenche Ideias
             const ideiasEl = document.getElementById('intel-ideias-lista');
             (storedIdeias?.ideias || []).forEach(ideia => {
-                const cor = TIPO_COLORS[ideia.tipo] || '#9BA3B8';
-                ideiasEl.innerHTML += `
-                <div class="intel-ideia-card">
-                    <span class="intel-ideia-tipo" style="background:${cor}20; color:${cor};">${ideia.tipo}</span>
-                    <div class="intel-ideia-titulo">${ideia.titulo}</div>
-                    <div class="intel-ideia-desc">${ideia.descricao}</div>
+                ideiasEl.innerHTML += `<div style="border-left:3px solid var(--purple); padding-left:8px; margin-bottom:10px;">
+                    <div style="font-size:12px; font-weight:bold;">${ideia.titulo}</div>
+                    <div style="font-size:10px; color:#666;">${ideia.tipo}</div>
                 </div>`;
             });
 
             document.getElementById('intel-radar-analise').innerHTML = stored.analise || '';
         }
 
+        /* --- 6. EXECUÇÃO DA ANÁLISE COM GROQ (Substituição 6) --- 
+        */
         async function runIntelAnalysis() {
             if (intelAnalysisRunning) return;
+
+            // Garante que a chave existe (busca no banco se a variável estiver vazia)
+            if (!GROQ_API_KEY) {
+                const loaded = await loadGroqKeyFromSupabase();
+                if (!loaded) {
+                    alert("Por favor, configure sua chave Groq primeiro.");
+                    openIntelConfigModal();
+                    return;
+                }
+            }
+
             intelAnalysisRunning = true;
-            document.getElementById('btn-run-intel').disabled = true;
-            document.getElementById('btn-run-intel').innerText = '⏳ Analisando...';
+            const btn = document.getElementById('btn-run-intel');
+            btn.innerHTML = "⏳ Analisando...";
 
             try {
-                // SIMULAÇÃO DE RESPOSTA DA IA (Aqui entra sua lógica de fetch da OpenAI/Claude)
-                const mockRadar = { 
-                    temas: [{nome: 'Eficiência N-Type', score: 95}, {nome: 'Armazenamento Híbrido', score: 82}],
-                    formatos: [{nome: 'Reels Educativo', icone: '📱'}],
-                    analise: 'O mercado está focado em novas tecnologias de células...'
-                };
-                const mockIdeias = { 
-                    ideias: [{titulo: 'Comparativo Topcon', tipo: 'Carrossel', descricao: 'Explicar vantagens técnicas.'}] 
-                };
-                const mockAlertas = { alertas: [] };
+                const prompt = `Analise o mercado solar para a empresa Fotus. Concorrentes: ${intelConcorrentes.join(', ')}. Responda APENAS JSON.`;
+                
+                const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${GROQ_API_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        model: "llama3-8b-8192",
+                        messages: [{role: "user", content: prompt}],
+                        response_format: { type: "json_object" }
+                    })
+                });
+
+                const data = await response.json();
+                const result = JSON.parse(data.choices[0].message.content);
 
                 const now = new Date().toISOString();
-                intelData.radar = mockRadar;
-                intelData.ideias = mockIdeias;
-                intelData.alertas = mockAlertas;
+
+                // Atualiza estado em memória (Substituição 6)
+                intelData.radar   = result.radar;
+                intelData.ideias  = result.ideias;
+                intelData.alertas = result.alertas;
                 intelLastAnalysis = now;
 
-                await saveAnalysisToSupabase(mockRadar, mockIdeias, mockAlertas, intelConcorrentes, now);
-                
-                renderTabRadar(document.getElementById('intel-content'));
-                alert('Análise Concluída!');
+                // Salva no Supabase (Tabela analyses)
+                await saveAnalysisToSupabase(result.radar, result.ideias, result.alertas, intelConcorrentes, now);
+
+                renderTabRadar(document.getElementById('view-intel-content'));
+                alert("✅ Análise concluída!");
 
             } catch (e) {
                 console.error(e);
+                alert("Erro na análise. Verifique sua chave API.");
             } finally {
                 intelAnalysisRunning = false;
-                document.getElementById('btn-run-intel').disabled = false;
-                document.getElementById('btn-run-intel').innerText = '⚡ Analisar Agora';
+                btn.innerHTML = "⚡ Analisar Agora";
             }
         }
 
-        async function saveAnalysisToSupabase(radar, ideias, alertas, concorrentes, timestamp) {
+        /* --- 7. FUNÇÕES AUXILIARES DE MODAL E SALVAMENTO --- 
+        */
+        function openIntelConfigModal() { document.getElementById('modal-intel-config').classList.add('open'); }
+        function closeIntelConfigModal() { document.getElementById('modal-intel-config').classList.remove('open'); }
+
+        async function saveIntelKey() {
+            const val = document.getElementById('input-groq-key').value.trim();
+            if (!val) return;
+            
+            try {
+                // Salva na tabela groq_config do Supabase
+                await sbFetch('groq_config', 'POST', { userid: currentUser.id, groqapikey: val });
+                GROQ_API_KEY = val;
+                alert("Chave salva!");
+                closeIntelConfigModal();
+            } catch (e) { alert("Erro ao salvar."); }
+        }
+
+        async function saveAnalysisToSupabase(radar, ideias, alertas, concorrentes, now) {
             const payload = {
                 userid: currentUser.id,
                 radardata: JSON.stringify(radar),
                 ideasdata: JSON.stringify(ideias),
                 alertasdata: JSON.stringify(alertas),
-                updatedat: timestamp
+                updatedat: now
             };
-            await sbFetch('analyses', 'POST', payload);
+            return await sbFetch('analyses', 'POST', payload);
         }
 
-        // Inicialização
-        window.onload = renderIntelView;
+        function renderIntelTab(tab) {
+            renderTabRadar(document.getElementById('view-intel-content'));
+        }
 
+        // Inicializa
+        window.onload = renderIntelView;
     </script>
 </body>
 </html>
